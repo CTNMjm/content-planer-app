@@ -34,14 +34,12 @@ enum LocationStatus {
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
-  password      String
   name          String?
-  role          String         @default("USER") // NEU: role Feld hinzufügen
+  password      String
+  emailVerified DateTime?
+  userLocations UserLocation[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  
-  // Relations
-  userLocations UserLocation[] // FEHLTE: Relation zu UserLocation
   
   // Relations for created/updated content
   createdContentPlans ContentPlan[] @relation("ContentPlanCreatedBy")
@@ -61,15 +59,17 @@ model UserRole {
 
 model Location {
   id            String         @id @default(cuid())
-  name          String         @unique
-  status        String         @default("ACTIVE")
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  
+  name          String
+  address       String?
+  status        LocationStatus @default(ACTIVE)
   userLocations UserLocation[]
   contentPlans  ContentPlan[]
   inputPlans    InputPlan[]
-  redakPlans    RedakPlan[]    // FEHLTE: Relation zu RedakPlan
+  redakPlans    RedakPlan[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  @@index([status])
 }
 
 // Pivot-Tabelle User <-> Standort (viele zu viele)
@@ -103,11 +103,12 @@ model UserLocationRole {
 // Einzelne Permission (Aktion) für einen User an einem Standort
 model Permission {
   id              String       @id @default(cuid())
-  name            String
+  code            String       // z.B. "content.create", "input.edit"
+  description     String?
   userLocation    UserLocation @relation(fields: [userLocationId], references: [id], onDelete: Cascade)
   userLocationId  String
   
-  @@unique([userLocationId, name])
+  @@unique([userLocationId, code])
   @@index([userLocationId])
 }
 
