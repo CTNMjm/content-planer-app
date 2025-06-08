@@ -29,8 +29,8 @@ export default async function DashboardPage() {
   });
 
   const isAdmin = userWithDetails?.userLocations.some(ul => 
-    ul.roles.some(r => r.role.name === 'Admin')
-  );
+    ul.roles.some(r => r.role.name === 'LOCATION_ADMIN')
+  ) || userWithDetails?.role === 'ADMIN';
 
   const locationIds = userWithDetails?.userLocations.map(ul => ul.location.id) || [];
   const locationCount = locationIds.length;

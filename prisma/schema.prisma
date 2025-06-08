@@ -1,11 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-// schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,46 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ===== Enums =====
-
-enum ContentStatus {
-  DRAFT
-  READY
-  IN_PROGRESS
-  COMPLETED
-}
-
-enum LocationStatus {
-  ACTIVE
-  INACTIVE
-}
-
-// ===== User, Rollen, Rechte, Standorte =====
-
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  password      String
-  name          String?
-  role          String         @default("USER") // NEU: role Feld hinzufügen
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  
-  // Relations
-  userLocations UserLocation[] // FEHLTE: Relation zu UserLocation
-  
-  // Relations for created/updated content
-  createdContentPlans ContentPlan[] @relation("ContentPlanCreatedBy")
-  updatedContentPlans ContentPlan[] @relation("ContentPlanUpdatedBy")
-  createdInputPlans   InputPlan[]   @relation("InputPlanCreatedBy")
-  updatedInputPlans   InputPlan[]   @relation("InputPlanUpdatedBy")
-  createdRedakPlans   RedakPlan[]   @relation("RedakPlanCreatedBy")
-  updatedRedakPlans   RedakPlan[]   @relation("RedakPlanUpdatedBy")
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  password            String
+  name                String?
+  role                String         @default("USER")
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  createdContentPlans ContentPlan[]  @relation("ContentPlanCreatedBy")
+  updatedContentPlans ContentPlan[]  @relation("ContentPlanUpdatedBy")
+  createdInputPlans   InputPlan[]    @relation("InputPlanCreatedBy")
+  updatedInputPlans   InputPlan[]    @relation("InputPlanUpdatedBy")
+  createdRedakPlans   RedakPlan[]    @relation("RedakPlanCreatedBy")
+  updatedRedakPlans   RedakPlan[]    @relation("RedakPlanUpdatedBy")
+  userLocations       UserLocation[]
 }
 
 model UserRole {
-  id          String   @id @default(cuid())
-  name        String   @unique // z.B. "Admin", "Kunde", "Agentur"
+  id          String             @id @default(cuid())
+  name        String             @unique
   description String?
   userRoles   UserLocationRole[]
 }
@@ -65,75 +37,67 @@ model Location {
   status        String         @default("ACTIVE")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  
-  userLocations UserLocation[]
   contentPlans  ContentPlan[]
   inputPlans    InputPlan[]
-  redakPlans    RedakPlan[]    // FEHLTE: Relation zu RedakPlan
+  redakPlans    RedakPlan[]
+  userLocations UserLocation[]
 }
 
-// Pivot-Tabelle User <-> Standort (viele zu viele)
 model UserLocation {
-  id            String                @id @default(cuid())
-  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String
-  location      Location              @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  locationId    String
-  roles         UserLocationRole[]    // Liste der Rollen pro User an diesem Standort
-  permissions   Permission[]          // Feingranulare Rechte
-  
+  id          String             @id @default(cuid())
+  userId      String
+  locationId  String
+  permissions Permission[]
+  location    Location           @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roles       UserLocationRole[]
+
   @@unique([userId, locationId])
   @@index([userId])
   @@index([locationId])
 }
 
-// Zuordnung Rolle zu UserLocation (viele Rollen pro UserLocation)
 model UserLocationRole {
-  id              String       @id @default(cuid())
-  userLocation    UserLocation @relation(fields: [userLocationId], references: [id], onDelete: Cascade)
-  userLocationId  String
-  role            UserRole     @relation(fields: [roleId], references: [id])
-  roleId          String
-  
+  id             String       @id @default(cuid())
+  userLocationId String
+  roleId         String
+  role           UserRole     @relation(fields: [roleId], references: [id])
+  userLocation   UserLocation @relation(fields: [userLocationId], references: [id], onDelete: Cascade)
+
   @@unique([userLocationId, roleId])
   @@index([userLocationId])
   @@index([roleId])
 }
 
-// Einzelne Permission (Aktion) für einen User an einem Standort
 model Permission {
-  id              String       @id @default(cuid())
-  name            String
-  userLocation    UserLocation @relation(fields: [userLocationId], references: [id], onDelete: Cascade)
-  userLocationId  String
-  
+  id             String       @id @default(cuid())
+  name           String
+  userLocationId String
+  userLocation   UserLocation @relation(fields: [userLocationId], references: [id], onDelete: Cascade)
+
   @@unique([userLocationId, name])
   @@index([userLocationId])
 }
 
-// ===== ContentPlan, InputPlan, RedakPlan =====
-
 model ContentPlan {
-  id           String     @id @default(cuid())
-  monat        String
-  bezug        String
-  mehrwert     String?
+  id            String        @id @default(cuid())
+  monat         String
+  bezug         String
+  mehrwert      String?
   mechanikThema String
-  idee         String
-  platzierung  String
-  status       ContentStatus @default(DRAFT)
-  location     Location   @relation(fields: [locationId], references: [id])
-  locationId   String
-  createdBy    User?      @relation("ContentPlanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  createdById  String?
-  updatedBy    User?      @relation("ContentPlanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  updatedById  String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  
-  // Relations
-  inputPlans   InputPlan[]
-  
+  idee          String
+  platzierung   String
+  status        ContentStatus @default(DRAFT)
+  locationId    String
+  createdById   String?
+  updatedById   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  createdBy     User?         @relation("ContentPlanCreatedBy", fields: [createdById], references: [id])
+  location      Location      @relation(fields: [locationId], references: [id])
+  updatedBy     User?         @relation("ContentPlanUpdatedBy", fields: [updatedById], references: [id])
+  inputPlans    InputPlan[]
+
   @@index([locationId])
   @@index([status])
   @@index([monat])
@@ -142,32 +106,29 @@ model ContentPlan {
 }
 
 model InputPlan {
-  id           String     @id @default(cuid())
-  contentPlan  ContentPlan? @relation(fields: [contentPlanId], references: [id], onDelete: SetNull)
+  id            String        @id @default(cuid())
   contentPlanId String?
-  // Felder wie bei ContentPlan plus Zusatzinfos
-  monat        String
-  bezug        String
-  mehrwert     String?
+  monat         String
+  bezug         String
+  mehrwert      String?
   mechanikThema String
-  idee         String
-  platzierung  String
-  status       ContentStatus @default(DRAFT)
-  voe          DateTime?
-  zusatzinfo   String?    // Ergaenzende Infos, Briefings etc.
-  gptResult    String?    // Output von n8n/AI
-  location     Location   @relation(fields: [locationId], references: [id])
-  locationId   String
-  createdBy    User?      @relation("InputPlanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  createdById  String?
-  updatedBy    User?      @relation("InputPlanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  updatedById  String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  
-  // Relations
-  redakPlans   RedakPlan[]
-  
+  idee          String
+  platzierung   String
+  status        ContentStatus @default(DRAFT)
+  voe           DateTime?
+  zusatzinfo    String?
+  gptResult     String?
+  locationId    String
+  createdById   String?
+  updatedById   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  contentPlan   ContentPlan?  @relation(fields: [contentPlanId], references: [id])
+  createdBy     User?         @relation("InputPlanCreatedBy", fields: [createdById], references: [id])
+  location      Location      @relation(fields: [locationId], references: [id])
+  updatedBy     User?         @relation("InputPlanUpdatedBy", fields: [updatedById], references: [id])
+  redakPlans    RedakPlan[]
+
   @@index([locationId])
   @@index([contentPlanId])
   @@index([status])
@@ -177,26 +138,26 @@ model InputPlan {
 }
 
 model RedakPlan {
-  id           String     @id @default(cuid())
-  inputPlan    InputPlan? @relation(fields: [inputPlanId], references: [id], onDelete: SetNull)
-  inputPlanId  String?
-  monat        String
-  bezug        String
+  id            String        @id @default(cuid())
+  inputPlanId   String?
+  monat         String
+  bezug         String
   mechanikThema String
-  idee         String
-  platzierung  String
-  voe          DateTime
-  status       ContentStatus @default(DRAFT)
-  publiziert   Boolean    @default(false)
-  location     Location   @relation(fields: [locationId], references: [id])
-  locationId   String
-  createdBy    User?      @relation("RedakPlanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  createdById  String?
-  updatedBy    User?      @relation("RedakPlanUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
-  updatedById  String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  
+  idee          String
+  platzierung   String
+  voe           DateTime
+  status        ContentStatus @default(DRAFT)
+  publiziert    Boolean       @default(false)
+  locationId    String
+  createdById   String?
+  updatedById   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  createdBy     User?         @relation("RedakPlanCreatedBy", fields: [createdById], references: [id])
+  inputPlan     InputPlan?    @relation(fields: [inputPlanId], references: [id])
+  location      Location      @relation(fields: [locationId], references: [id])
+  updatedBy     User?         @relation("RedakPlanUpdatedBy", fields: [updatedById], references: [id])
+
   @@index([locationId])
   @@index([inputPlanId])
   @@index([status])
@@ -206,3 +167,15 @@ model RedakPlan {
   @@index([updatedById])
 }
 
+enum ContentStatus {
+  DRAFT
+  IN_PROGRESS
+  REVIEW
+  APPROVED
+  COMPLETED
+}
+
+enum LocationStatus {
+  ACTIVE
+  INACTIVE
+}

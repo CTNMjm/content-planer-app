@@ -283,8 +283,9 @@ export function ContentPlanModal({
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         >
                           <option value="DRAFT">Entwurf</option>
-                          <option value="PUBLISHED">Bereit</option>
+                          <option value="APPROVED">Bereit</option>
                           <option value="IN_PROGRESS">In Arbeit</option>
+                          <option value="COMPLETED">Abgeschlossen</option>
                         </select>
                       </div>
 

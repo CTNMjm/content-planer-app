@@ -34,51 +34,66 @@ async function main() {
     },
   });
 
-  // Rollen im Rollen-System erstellen
-  const adminRole = await prisma.userRole.upsert({
-    where: { name: "Admin" },
+  // Demo User erstellen
+  const hashedPassword = await bcrypt.hash("demo123", 10);
+
+  const demoUser = await prisma.user.upsert({
+    where: { email: "demo@example.com" },
     update: {},
     create: {
-      name: "Admin",
-      description: "Administrator mit vollen Rechten"
-    }
+      email: "demo@example.com",
+      password: hashedPassword,
+      name: "Demo User",
+      role: "USER",
+    },
   });
 
-  const userRole = await prisma.userRole.upsert({
-    where: { name: "User" },
-    update: {},
-    create: {
-      name: "User",
-      description: "Standard Benutzer"
-    }
-  });
-
-  // Locations erstellen
+  // 2. Erstelle Demo-Locations
   const location1 = await prisma.location.upsert({
-    where: { name: "Hauptstandort" },
+    where: { name: "Berlin Office" },
     update: {},
     create: {
-      name: "Hauptstandort",
-      status: "ACTIVE"
-    }
+      name: "Berlin Office",
+      status: "ACTIVE",
+    },
   });
 
   const location2 = await prisma.location.upsert({
-    where: { name: "Online Shop" },
+    where: { name: "Hamburg Office" },
     update: {},
     create: {
-      name: "Online Shop",
-      status: "ACTIVE"
-    }
+      name: "Hamburg Office",
+      status: "ACTIVE",
+    },
   });
 
+  // Locations erstellen
   const location3 = await prisma.location.upsert({
     where: { name: "Social Media" },
     update: {},
     create: {
       name: "Social Media",
-      status: "ACTIVE"
-    }
+      status: "ACTIVE",
+    },
+  });
+
+  // UserRoles erstellen
+  const adminRole = await prisma.userRole.upsert({
+    where: { name: "LOCATION_ADMIN" },
+    update: {},
+    create: {
+      name: "LOCATION_ADMIN",
+      description: "Administrator für einen Standort",
+    },
+  });
+
+  const userRole = await prisma.userRole.upsert({
+    where: { name: "LOCATION_USER" },
+    update: {},
+    create: {
+      name: "LOCATION_USER",
+      description: "Normaler Benutzer für einen Standort",
+    },
   });
 
   // Admin mit Hauptstandort verknüpfen
@@ -86,14 +101,14 @@ async function main() {
     where: {
       userId_locationId: {
         userId: admin.id,
-        locationId: location1.id
-      }
+        locationId: location1.id,
+      },
     },
     update: {},
     create: {
       userId: admin.id,
-      locationId: location1.id
-    }
+      locationId: location1.id,
+    },
   });
 
   // Admin-Rolle zuweisen
@@ -101,14 +116,14 @@ async function main() {
     where: {
       userLocationId_roleId: {
         userLocationId: adminUserLocation.id,
-        roleId: adminRole.id
-      }
+        roleId: adminRole.id,
+      },
     },
     update: {},
     create: {
       userLocationId: adminUserLocation.id,
-      roleId: adminRole.id
-    }
+      roleId: adminRole.id,
+    },
   });
 
   // Permissions erstellen
@@ -117,7 +132,7 @@ async function main() {
     "create_content",
     "edit_content",
     "delete_content",
-    "publish_content"
+    "publish_content",
   ];
 
   for (const permName of adminPermissions) {
@@ -125,14 +140,14 @@ async function main() {
       where: {
         userLocationId_name: {
           userLocationId: adminUserLocation.id,
-          name: permName
-        }
+          name: permName,
+        },
       },
       update: {},
       create: {
         userLocationId: adminUserLocation.id,
-        name: permName
-      }
+        name: permName,
+      },
     });
   }
 
@@ -141,14 +156,14 @@ async function main() {
     where: {
       userId_locationId: {
         userId: user.id,
-        locationId: location1.id
-      }
+        locationId: location1.id,
+      },
     },
     update: {},
     create: {
       userId: user.id,
-      locationId: location1.id
-    }
+      locationId: location1.id,
+    },
   });
 
   // User-Rolle zuweisen
@@ -156,14 +171,14 @@ async function main() {
     where: {
       userLocationId_roleId: {
         userLocationId: userUserLocation.id,
-        roleId: userRole.id
-      }
+        roleId: userRole.id,
+      },
     },
     update: {},
     create: {
       userLocationId: userUserLocation.id,
-      roleId: userRole.id
-    }
+      roleId: userRole.id,
+    },
   });
 
   // User Permissions
@@ -171,14 +186,14 @@ async function main() {
     where: {
       userLocationId_name: {
         userLocationId: userUserLocation.id,
-        name: "view_content"
-      }
+        name: "view_content",
+      },
     },
     update: {},
     create: {
       userLocationId: userUserLocation.id,
-      name: "view_content"
-    }
+      name: "view_content",
+    },
   });
 
   // ========================================
@@ -196,7 +211,7 @@ async function main() {
       platzierung: "Instagram, Facebook",
       status: "COMPLETED" as const,
       locationId: location1.id,
-      createdById: admin.id
+      createdById: admin.id,
     },
     {
       monat: "2025-02",
@@ -205,9 +220,9 @@ async function main() {
       mechanikThema: "Gewinnspiel",
       idee: "Gewinne ein romantisches Dinner für 2",
       platzierung: "Website, Newsletter",
-      status: "READY" as const,
+      status: "APPROVED" as const,
       locationId: location1.id,
-      createdById: admin.id
+      createdById: admin.id,
     },
     {
       monat: "2025-03",
@@ -218,7 +233,7 @@ async function main() {
       platzierung: "Blog, YouTube",
       status: "IN_PROGRESS" as const,
       locationId: location1.id,
-      createdById: admin.id
+      createdById: admin.id,
     },
     {
       monat: "2025-04",
@@ -229,14 +244,14 @@ async function main() {
       platzierung: "Pinterest, Instagram",
       status: "DRAFT" as const,
       locationId: location1.id,
-      createdById: admin.id
-    }
+      createdById: admin.id,
+    },
   ];
 
   const createdContentPlans = [];
   for (const plan of contentPlans) {
     const created = await prisma.contentPlan.create({
-      data: plan
+      data: plan,
     });
     createdContentPlans.push(created);
   }
@@ -257,9 +272,10 @@ async function main() {
       platzierung: "Instagram, Facebook",
       status: "COMPLETED" as const,
       voe: new Date("2025-01-02"),
-      zusatzinfo: "Fokus auf praktische, umsetzbare Tipps. Zielgruppe: 25-45 Jahre",
+      zusatzinfo:
+        "Fokus auf praktische, umsetzbare Tipps. Zielgruppe: 25-45 Jahre",
       locationId: location1.id,
-      createdById: admin.id
+      createdById: admin.id,
     },
     {
       contentPlanId: createdContentPlans[1].id,
@@ -271,16 +287,17 @@ async function main() {
       platzierung: "Website, Newsletter",
       status: "IN_PROGRESS" as const,
       voe: new Date("2025-02-07"),
-      zusatzinfo: "Kooperation mit lokalem Restaurant. Teilnahmebedingungen klären.",
+      zusatzinfo:
+        "Kooperation mit lokalem Restaurant. Teilnahmebedingungen klären.",
       locationId: location1.id,
-      createdById: admin.id
-    }
+      createdById: admin.id,
+    },
   ];
 
   const createdInputPlans = [];
   for (const plan of inputPlans) {
     const created = await prisma.inputPlan.create({
-      data: plan
+      data: plan,
     });
     createdInputPlans.push(created);
   }
@@ -302,13 +319,13 @@ async function main() {
       status: "COMPLETED" as const,
       publiziert: true,
       locationId: location1.id,
-      createdById: admin.id
-    }
+      createdById: admin.id,
+    },
   ];
 
   for (const plan of redakPlans) {
     await prisma.redakPlan.create({
-      data: plan
+      data: plan,
     });
   }
 

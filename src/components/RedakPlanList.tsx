@@ -156,11 +156,19 @@ export default function RedakPlanList() {
                             </span>
                           )}
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            plan.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' : 
-                            plan.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-800' : 
+                            plan.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-800' :
+                            plan.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                            plan.status === 'REVIEW' ? 'bg-orange-100 text-orange-800' :
+                            plan.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                            plan.status === 'COMPLETED' ? 'bg-purple-100 text-purple-800' :
                             'bg-gray-100 text-gray-800'
                           }`}>
-                            {plan.status}
+                            {plan.status === 'DRAFT' ? 'Entwurf' :
+                             plan.status === 'IN_PROGRESS' ? 'In Bearbeitung' :
+                             plan.status === 'REVIEW' ? 'Überprüfung' :
+                             plan.status === 'APPROVED' ? 'Freigegeben' :
+                             plan.status === 'COMPLETED' ? 'Abgeschlossen' :
+                             plan.status}
                           </span>
                         </div>
                       </div>

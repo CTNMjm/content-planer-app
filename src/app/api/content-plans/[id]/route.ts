@@ -56,20 +56,31 @@ export async function PUT(
     }
 
     const body = await request.json();
-    
+    console.log('API-DEBUG: body.status:', body.status, 'body:', body);
+    const validStatuses = ['DRAFT', 'IN_PROGRESS', 'REVIEW', 'APPROVED', 'COMPLETED'];
+
+    // Validiere den Status
+    const status = body.status && validStatuses.includes(body.status) 
+      ? body.status 
+      : 'DRAFT';
+    console.log('API-DEBUG: verwendeter Status für Update:', status);
+
+    const updateData = {
+      monat: body.monat,
+      bezug: body.bezug,
+      mehrwert: body.mehrwert || null,
+      mechanikThema: body.mechanikThema,
+      idee: body.idee,
+      platzierung: body.platzierung,
+      status: status, // Verwende den validierten Status
+      locationId: body.locationId,
+    };
+    console.log('API-DEBUG: updateData:', updateData);
+
     // Vereinfachtes Update ohne komplexe Includes
     await prisma.contentPlan.update({
       where: { id: params.id },
-      data: {
-        monat: body.monat,
-        bezug: body.bezug,
-        mehrwert: body.mehrwert || null,
-        mechanikThema: body.mechanikThema,
-        idee: body.idee,
-        platzierung: body.platzierung,
-        status: body.status || "DRAFT",
-        locationId: body.locationId,
-      }
+      data: updateData
     });
 
     // Separater Query für Response

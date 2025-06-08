@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import ContentPlanModal from "@/components/ContentPlanModal";
+import { ContentPlanModal } from "@/components/ContentPlanModal";
 import ConvertToInputModal from "@/components/ConvertToInputModal";
 
 interface ContentPlan {
@@ -13,7 +13,7 @@ interface ContentPlan {
   mechanikThema: string;
   idee: string;
   platzierung: string;
-  status: "DRAFT" | "READY" | "IN_PROGRESS" | "COMPLETED";
+  status: "DRAFT" | "APPROVED" | "IN_PROGRESS" | "COMPLETED";
   location: {
     id: string;
     name: string;
@@ -143,14 +143,43 @@ export default function ContentPlanClient() {
   };
 
   const handleConvert = (plan: ContentPlan) => {
+    if (plan.status !== 'APPROVED') {
+      alert('Nur Pläne mit Status "Freigegeben" können in den Input-Plan übernommen werden.');
+      return;
+    }
     setSelectedPlan(plan);
     setShowConvertModal(true);
   };
 
-  const handleConvertSuccess = () => {
-    setShowConvertModal(false);
-    setSelectedPlan(null);
-    router.push("/inputplan");
+  const handleConvertSuccess = async () => {
+    if (!selectedPlan) return;
+    
+    try {
+      // Status auf COMPLETED setzen
+      const response = await fetch(`/api/content-plans/${selectedPlan.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...selectedPlan,
+          status: 'COMPLETED'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      // Liste aktualisieren
+      await fetchContentPlans();
+      
+      setShowConvertModal(false);
+      setSelectedPlan(null);
+    } catch (error) {
+      console.error('Error updating content plan status:', error);
+      alert('Fehler beim Aktualisieren des Status');
+    }
   };
 
   const handleExport = async () => {
@@ -192,6 +221,24 @@ export default function ContentPlanClient() {
     } catch (err) {
       alert("Fehler beim Import: " + (err instanceof Error ? err.message : "Unbekannter Fehler"));
     }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      DRAFT: { text: "Entwurf", class: "bg-gray-100 text-gray-800" },
+      IN_PROGRESS: { text: "In Bearbeitung", class: "bg-yellow-100 text-yellow-800" },
+      REVIEW: { text: "Überprüfung", class: "bg-orange-100 text-orange-800" },
+      APPROVED: { text: "Freigegeben", class: "bg-green-100 text-green-800" },
+      COMPLETED: { text: "Abgeschlossen", class: "bg-blue-100 text-blue-800" },
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.DRAFT;
+    
+    return (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.class}`}>
+        {config.text}
+      </span>
+    );
   };
 
   if (loading) {
@@ -299,31 +346,35 @@ export default function ContentPlanClient() {
                   <td className="px-6 py-4 whitespace-nowrap">{plan.mechanikThema}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{plan.location.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                      ${plan.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
-                        plan.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-800' : 
-                        plan.status === 'READY' ? 'bg-blue-100 text-blue-800' : 
-                        'bg-gray-100 text-gray-800'}`}>
-                      {plan.status}
-                    </span>
+                    {getStatusBadge(plan.status)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button
                       onClick={() => handleConvert(plan)}
-                      className="text-green-600 hover:text-green-900 mr-3"
-                      title="In Input-Plan übernehmen"
+                      className={`mr-3 ${
+                        plan.status === 'APPROVED' 
+                          ? 'text-green-600 hover:text-green-900 cursor-pointer' 
+                          : 'text-gray-400 cursor-not-allowed'
+                      }`}
+                      title={
+                        plan.status === 'APPROVED' 
+                          ? "In Input-Plan übernehmen" 
+                          : plan.status === 'COMPLETED'
+                          ? "Bereits übernommen"
+                          : "Nur Pläne mit Status 'Freigegeben' können übernommen werden"
+                      }
+                      disabled={plan.status !== 'APPROVED'}
                     >
                       → Input
                     </button>
                     <button
-                      onClick={() => router.push(`/contentplan/${plan.id}`)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                    >
-                      Anzeigen
-                    </button>
-                    <button
                       onClick={() => handleEdit(plan)}
-                      className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      className={`mr-3 ${
+                        plan.status !== 'COMPLETED'
+                          ? 'text-indigo-600 hover:text-indigo-900 cursor-pointer'
+                          : 'text-gray-400 cursor-not-allowed'
+                      }`}
+                      disabled={plan.status === 'COMPLETED'}
                     >
                       Bearbeiten
                     </button>
@@ -347,13 +398,7 @@ export default function ContentPlanClient() {
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-gray-900">{plan.monat}</h3>
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${plan.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 
-                      plan.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-800' : 
-                      plan.status === 'READY' ? 'bg-blue-100 text-blue-800' : 
-                      'bg-gray-100 text-gray-800'}`}>
-                    {plan.status}
-                  </span>
+                  {getStatusBadge(plan.status)}
                 </div>
                 <dl className="space-y-2">
                   <div>
@@ -417,7 +462,7 @@ export default function ContentPlanClient() {
             setSelectedPlan(null);
           }}
           contentPlan={selectedPlan}
-          onSuccess={handleConvertSuccess}
+          onSuccess={handleConvertSuccess} // Diese Zeile ändern
         />
       )}
     </div>

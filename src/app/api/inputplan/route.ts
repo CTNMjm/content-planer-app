@@ -27,9 +27,11 @@ export async function GET(request: NextRequest) {
           }
         }
       },
+      
       orderBy: {
-        voe: 'desc'
+        createdAt: 'desc'
       }
+      
     });
 
     return NextResponse.json(inputPlans);
@@ -55,28 +57,34 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log("Creating input plan with data:", body);
     
-    // Erstelle den Input-Plan
+    // Bereite die Daten vor und filtere ungültige Werte
+    const data: any = {
+      monat: body.monat,
+      bezug: body.bezug,
+      mehrwert: body.mehrwert,
+      mechanikThema: body.mechanikThema,
+      idee: body.idee,
+      platzierung: body.platzierung,
+      status: body.status || "DRAFT",
+      zusatzinfo: body.zusatzinfo || "",
+      locationId: body.locationId,
+      createdById: session.user.id,
+      updatedById: session.user.id,
+    };
+
+    // Nur hinzufügen wenn contentPlanId vorhanden
+    if (body.contentPlanId) {
+      data.contentPlanId = body.contentPlanId;
+    }
+
     const inputPlan = await prisma.inputPlan.create({
-      data: {
-        monat: body.monat,
-        bezug: body.bezug,
-        mehrwert: body.mehrwert,
-        mechanikThema: body.mechanikThema,
-        idee: body.idee,
-        platzierung: body.platzierung,
-        status: body.status || "DRAFT",
-        voe: new Date(body.voe),
-        zusatzinfo: body.zusatzinfo || "",
-        contentPlanId: body.contentPlanId,
-        locationId: body.locationId,
-        createdById: session.user.id,
-        updatedById: session.user.id
-      },
+      data,
       include: {
         location: true,
-        contentPlan: true
-      }
+        contentPlan: true,
+      },
     });
 
     return NextResponse.json(inputPlan, { status: 201 });
@@ -128,7 +136,6 @@ export async function PUT(request: NextRequest) {
       where: { id },
       data: {
         ...updateData,
-        veroeffentlichungsdatum: updateData.veroeffentlichungsdatum ? new Date(updateData.veroeffentlichungsdatum) : undefined,
         updatedById: session.user.id,
         updatedAt: new Date()
       },

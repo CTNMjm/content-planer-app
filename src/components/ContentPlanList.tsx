@@ -261,6 +261,12 @@ export default function ContentPlanList() {
     );
   }
 
+  // Add this function to handle opening the convert modal
+  const handleOpenConvertModal = (plan: ContentPlan) => {
+    setSelectedConvertPlan(plan);
+    setShowConvertModal(true);
+  };
+
   return (
     <div>
       {/* Action Bar */}
@@ -401,13 +407,19 @@ export default function ContentPlanList() {
                     <div className="w-32 text-sm text-gray-900">{plan.platzierung}</div>
                     <div className="w-24">
                       <span className={`inline-flex px-2 text-xs font-semibold rounded-full ${
-                        plan.status === 'PUBLISHED' 
-                          ? 'bg-green-100 text-green-800' 
-                          : plan.status === 'DRAFT' 
-                          ? 'bg-yellow-100 text-yellow-800' 
-                          : 'bg-gray-100 text-gray-800'
+                        plan.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-800' :
+                        plan.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                        plan.status === 'REVIEW' ? 'bg-orange-100 text-orange-800' :
+                        plan.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                        plan.status === 'COMPLETED' ? 'bg-purple-100 text-purple-800' :
+                        'bg-gray-100 text-gray-800'
                       }`}>
-                        {plan.status === 'PUBLISHED' ? 'Bereit' : plan.status === 'DRAFT' ? 'Entwurf' : plan.status}
+                        {plan.status === 'DRAFT' ? 'Entwurf' :
+                         plan.status === 'IN_PROGRESS' ? 'In Bearbeitung' :
+                         plan.status === 'REVIEW' ? 'Überprüfung' :
+                         plan.status === 'APPROVED' ? 'Freigegeben' :
+                         plan.status === 'COMPLETED' ? 'Abgeschlossen' :
+                         plan.status}
                       </span>
                     </div>
                     <div className="w-32 flex justify-end gap-2">
@@ -465,13 +477,19 @@ export default function ContentPlanList() {
             >
               <div className="flex justify-between items-start mb-4">
                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  plan.status === 'PUBLISHED' 
-                    ? 'bg-green-100 text-green-800' 
-                    : plan.status === 'DRAFT' 
-                    ? 'bg-yellow-100 text-yellow-800' 
-                    : 'bg-gray-100 text-gray-800'
+                  plan.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-800' :
+                  plan.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                  plan.status === 'REVIEW' ? 'bg-orange-100 text-orange-800' :
+                  plan.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                  plan.status === 'COMPLETED' ? 'bg-purple-100 text-purple-800' :
+                  'bg-gray-100 text-gray-800'
                 }`}>
-                  {plan.status === 'PUBLISHED' ? 'Bereit' : plan.status === 'DRAFT' ? 'Entwurf' : plan.status}
+                  {plan.status === 'DRAFT' ? 'Entwurf' :
+                   plan.status === 'IN_PROGRESS' ? 'In Bearbeitung' :
+                   plan.status === 'REVIEW' ? 'Überprüfung' :
+                   plan.status === 'APPROVED' ? 'Freigegeben' :
+                   plan.status === 'COMPLETED' ? 'Abgeschlossen' :
+                   plan.status}
                 </span>
                 <input
                   type="checkbox"
@@ -590,15 +608,22 @@ export default function ContentPlanList() {
         />
       )}
 
-      {showConvertModal && (
+      {showConvertModal && selectedConvertPlan && (
         <ConvertToInputModal
-          contentPlan={selectedConvertPlan}
+          contentPlan={{
+            ...selectedConvertPlan,
+            mechanikThema: selectedConvertPlan.themaGeschaeft,
+          }}
           isOpen={showConvertModal}
           onClose={() => {
             setShowConvertModal(false);
             setSelectedConvertPlan(null);
           }}
-          onConfirm={handleConvertToInput}
+          onSuccess={async () => {
+            await handleMoveToInput(selectedConvertPlan);
+            setShowConvertModal(false);
+            setSelectedConvertPlan(null);
+          }}
         />
       )}
     </div>
