@@ -1,0 +1,16 @@
+               List of relations
+ Schema |        Name        | Type  |  Owner   
+--------+--------------------+-------+----------
+ public | ContentPlan        | table | postgres
+ public | ContentPlanHistory | table | postgres
+ public | InputPlan          | table | postgres
+ public | InputPlanHistory   | table | postgres
+ public | Location           | table | postgres
+ public | Permission         | table | postgres
+ public | RedakPlan          | table | postgres
+ public | User               | table | postgres
+ public | UserLocation       | table | postgres
+ public | UserLocationRole   | table | postgres
+ public | UserRole           | table | postgres
+(11 rows)
+
