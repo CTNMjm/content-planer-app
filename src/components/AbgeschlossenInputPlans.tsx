@@ -35,6 +35,8 @@ interface InputPlan {
   };
   createdAt: string;
   updatedAt: string;
+  anlass?: string | null;
+  geschaeft?: string | null;
 }
 
 export default function AbgeschlossenInputPlans() {
@@ -132,8 +134,8 @@ export default function AbgeschlossenInputPlans() {
       console.log("Vorhandene Status:", [...new Set(data.map((p: InputPlan) => p.status))]);
       
       // Nur abgeschlossene Pläne anzeigen - prüfe beide möglichen Werte
-      const completedPlans = data.filter((plan: InputPlan) => 
-        plan.status === 'ABGESCHLOSSEN' || plan.status === 'COMPLETED'
+      const completedPlans = data.filter((plan: InputPlan) =>
+        plan.status === 'COMPLETED'
       );
       
       console.log("Gefilterte abgeschlossene Pläne:", completedPlans);
@@ -396,7 +398,6 @@ export default function AbgeschlossenInputPlans() {
                     }}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {console.log('Plan VOE:', plan.voe, 'Type:', typeof plan.voe)}
                       {plan.voe ? new Date(plan.voe).toLocaleDateString('de-DE') : '-'}
                     </td>
                     <td className="px-6 py-4">{plan.idee}</td>

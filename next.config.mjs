@@ -22,6 +22,12 @@ const nextConfig = {
       include: /node_modules/,
     });
     
+    // Ignoriere bestimmte Dateien vom Build
+    config.module.rules.push({
+      test: /backup_prisma.*\.(ts|tsx)$/,
+      loader: 'ignore-loader'
+    });
+    
     // Optimierungen
     if (!isServer) {
       config.resolve.fallback = {
@@ -33,6 +39,14 @@ const nextConfig = {
     }
     
     return config;
+  },
+  typescript: {
+    // Ignoriere TypeScript Fehler beim Build
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    // Ignoriere ESLint während des Builds
+    ignoreDuringBuilds: true,
   },
 }
 

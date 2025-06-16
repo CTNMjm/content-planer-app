@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -89,15 +89,23 @@ export async function PUT(
     } = data;
 
     // Erstelle History-Einträge für geänderte Felder
-    const historyEntries = [];
+    // Beispiel: Wenn historyEntries Objekte mit bestimmten Feldern enthalten soll
+    type HistoryEntry = {
+      field: string;
+      oldValue: any;
+      newValue: any;
+      // ggf. weitere Felder
+    };
+
+    const historyEntries: HistoryEntry[] = [];
     for (const [key, newValue] of Object.entries(updateData)) {
       const currentValue = currentPlan[key as keyof typeof currentPlan];
       if (currentValue !== newValue) {
         historyEntries.push({
-          field: key,  // ÄNDERUNG: von 'fieldName' zu 'field'
-          oldValue: String(currentValue || ""),
-          newValue: String(newValue || ""),
-          changedById: session.user.id
+          field: key,
+          oldValue: currentValue,
+          newValue: newValue,
+          // ggf. weitere Felder
         });
       }
     }
@@ -124,7 +132,8 @@ export async function PUT(
         await prisma.inputPlanHistory.createMany({
           data: historyEntries.map(entry => ({
             ...entry,
-            inputPlanId: params.id
+            inputPlanId: params.id,
+            changedById: session.user.id, // <-- hinzugefügt
           }))
         });
       }

@@ -28,7 +28,7 @@ interface ContentPlan {
   id: string;
   monat: string;
   bezug: string;
-  mehrwert?: string;
+  mehrwert?: string | null | undefined;
   mechanikThema: string;
   platzierung: string;
   idee: string;
@@ -37,15 +37,14 @@ interface ContentPlan {
     id: string;
     name: string;
   };
-  // Neue Felder hinzufügen
-  implementationLevel?: string;
-  creativeFormat?: string;
-  creativeBriefingExample?: string;
-  copyExample?: string;
-  copyExampleCustomized?: string;
-  firstCommentForEngagement?: string;
-  notes?: string;
-  action?: string;
+  implementationLevel?: string | null | undefined;
+  creativeFormat?: string | null | undefined;
+  creativeBriefingExample?: string | null | undefined;
+  copyExample?: string | null | undefined;
+  copyExampleCustomized?: string | null | undefined;
+  firstCommentForEngagement?: string | null | undefined;
+  notes?: string | null | undefined;
+  action?: string | null | undefined;
 }
 
 interface Location {
@@ -58,7 +57,8 @@ interface ContentPlanModalProps {
   contentPlan: ContentPlan | null;
   onClose: () => void;
   onSave: (data: ContentPlanFormData) => void;
-  selectedLocation?: string; // Neu: selectedLocation als Prop
+  selectedLocation?: string;
+  readOnly?: boolean; // <--- Diese Zeile ergänzen!
 }
 
 export function ContentPlanModal({

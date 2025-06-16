@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: NextRequest) {
+export const GET = async (req: NextRequest) => {
   try {
     const session = await getServerSession(authOptions);
 
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Query Parameter auslesen
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(req.url);
     const locationId = searchParams.get("locationId");
     const status = searchParams.get("status");
 

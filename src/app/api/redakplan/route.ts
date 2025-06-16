@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
+import { ContentStatus } from "@prisma/client"; // <--- das ist der Enum!
 
 // GET - Alle RedakPläne abrufen
 export async function GET(request: NextRequest) {
@@ -303,7 +304,7 @@ export async function PATCH(request: NextRequest) {
       where: { id },
       data: {
         publiziert,
-        status: publiziert ? 'published' : 'draft',
+        status: publiziert ? ContentStatus.APPROVED : ContentStatus.DRAFT,
         updatedById: session.user.id,
         updatedAt: new Date()
       },

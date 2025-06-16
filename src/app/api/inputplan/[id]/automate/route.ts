@@ -1,48 +1,59 @@
-import { NextRequest } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../auth/[...nextauth]/authOptions";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
+import axios from "axios";
 
 const N8N_WEBHOOK_URL = process.env.N8N_AI_WEBHOOK_URL || "https://dein-n8n-server/webhook/ai-generate";
 
-export async function POST(req: NextRequest, { params }) {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return new Response(JSON.stringify({ error: "Nicht eingeloggt" }), { status: 401 });
   }
-  const id = params.id as string;
 
-  // 1. InputPlan-Eintrag holen
-  const inputPlan = await prisma.inputPlan.findUnique({ where: { id } });
-  if (!inputPlan) {
-    return new Response(JSON.stringify({ error: "Nicht gefunden" }), { status: 404 });
-  }
+  const inputPlanId = params.id;
 
-  // 2. KI-Request an n8n schicken
   try {
-    const n8nRes = await fetch(N8N_WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        idee: inputPlan.idee,
-        mechanikThema: inputPlan.mechanikThema,
-        mehrwert: inputPlan.mehrwert,
-        platzierung: inputPlan.platzierung,
-        // Weitere Felder nach Bedarf
-      }),
-    });
-    const n8nData = await n8nRes.json();
-
-    // 3. Ergebnis speichern (z. B. in gptResult)
-    await prisma.inputPlan.update({
-      where: { id },
-      data: { gptResult: n8nData.gptResult || JSON.stringify(n8nData) }
+    const inputPlan = await prisma.contentPlan.findUnique({  // Geändert zu contentPlan
+      where: { id: inputPlanId },
+      include: { location: true },
     });
 
-    return new Response(JSON.stringify({ ok: true, gptResult: n8nData.gptResult }), { status: 200 });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: "KI-Automatisierung fehlgeschlagen" }), { status: 500 });
+    if (!inputPlan) {
+      return new Response(JSON.stringify({ error: "ContentPlan nicht gefunden" }), { status: 404 });
+    }
+    
+    if (!inputPlan.location) {
+        return new Response(JSON.stringify({ error: "Location für ContentPlan nicht gefunden" }), { status: 400 });
+    }
+
+    // Daten für den Webhook vorbereiten - angepasst an ContentPlan Felder
+    const webhookData = {
+      inputPlanId: inputPlan.id,
+      monat: inputPlan.monat,
+      mechanikThema: inputPlan.mechanikThema,
+      bezug: inputPlan.bezug,
+      platzierung: inputPlan.platzierung,
+      locationName: inputPlan.location.name,
+      // Weitere relevante Daten hinzufügen
+    };
+
+    // Webhook aufrufen
+    const n8nResponse = await axios.post(N8N_WEBHOOK_URL, webhookData);
+
+    // Optional: Antwort von n8n loggen oder verarbeiten
+    console.log("n8n Webhook response:", n8nResponse.data);
+
+    return NextResponse.json({ message: "Automatisierung gestartet", data: n8nResponse.data });
+  } catch (error) {
+    console.error("Fehler beim Starten der Automatisierung:", error);
+    let errorMessage = "Fehler beim Starten der Automatisierung.";
+    if (axios.isAxiosError(error) && error.response) {
+      errorMessage = `Fehler vom Webhook: ${error.response.status} ${JSON.stringify(error.response.data)}`;
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    return new Response(JSON.stringify({ error: errorMessage }), { status: 500 });
   }
 }

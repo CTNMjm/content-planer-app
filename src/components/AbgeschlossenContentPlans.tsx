@@ -4,29 +4,33 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ContentPlanModal } from "@/components/ContentPlanModal";
+import type { ContentPlan as PrismaContentPlan } from "@prisma/client";
 
-interface ContentPlan {
-  id: string;
-  monat: string;
-  bezug: string;
-  mehrwert?: string | null;
-  mechanikThema: string;
-  idee: string;
-  platzierung: string;
-  status: "DRAFT" | "APPROVED" | "IN_PROGRESS" | "COMPLETED";
+type ContentPlan = PrismaContentPlan & {
   location: {
     id: string;
     name: string;
+    // ggf. weitere Felder
   };
-  createdAt: string;
-  updatedAt: string;
-  completedAt?: string;
-}
+  anlass?: string | null; // <--- Diese Zeile ergänzen
+  mehrwert?: string | null | undefined;
+  implementationLevel?: string | null | undefined;
+  creativeFormat?: string | null | undefined;
+  creativeBriefingExample?: string | null | undefined;
+  copyExample?: string | null | undefined;
+  copyExampleCustomized?: string | null | undefined;
+  firstCommentForEngagement?: string | null | undefined;
+  notes?: string | null | undefined;
+  action?: string | null | undefined;
+  statusChangedById?: string | null | undefined;
+  // ggf. weitere Felder, die betroffen sind
+};
 
 export default function AbgeschlossenContentPlans() {
   const router = useRouter();
   const [contentPlans, setContentPlans] = useState<ContentPlan[]>([]);
   const [filteredPlans, setFilteredPlans] = useState<ContentPlan[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<ContentPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,7 +41,6 @@ export default function AbgeschlossenContentPlans() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [selectedPlan, setSelectedPlan] = useState<ContentPlan | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -54,7 +57,8 @@ export default function AbgeschlossenContentPlans() {
         plan.mechanikThema.toLowerCase().includes(searchTerm.toLowerCase()) ||
         plan.idee.toLowerCase().includes(searchTerm.toLowerCase()) ||
         plan.monat.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        plan.platzierung.toLowerCase().includes(searchTerm.toLowerCase())
+        plan.platzierung.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (plan.anlass && plan.anlass.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -408,11 +412,9 @@ export default function AbgeschlossenContentPlans() {
           }}
           contentPlan={selectedPlan}
           onSave={async () => {
-            // Für abgeschlossene Pläne deaktivieren wir das Speichern
             alert("Abgeschlossene Pläne können nicht bearbeitet werden. Nutzen Sie 'Reaktivieren' um den Plan wieder zu bearbeiten.");
           }}
-          session={{ user: { role: 'viewer' } }} // Read-only Modus
-          readOnly={true} // Neues Prop für Read-only
+          readOnly={true}
         />
       )}
     </div>

@@ -1,11 +1,11 @@
-import { NextRequest } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../auth/[...nextauth]/authOptions";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function POST(req: NextRequest, { params }) {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return new Response(JSON.stringify({ error: "Nicht eingeloggt" }), { status: 401 });
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest, { params }) {
   if (!inputPlan) {
     return new Response(JSON.stringify({ error: "Nicht gefunden" }), { status: 404 });
   }
-  if (!inputPlan.veröffentlichkeitsdatum) {
+  if (!inputPlan.voe) {
     return new Response(JSON.stringify({ error: "VÖ-Datum ist erforderlich!" }), { status: 400 });
   }
 
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, { params }) {
       mechanikThema: inputPlan.mechanikThema,
       idee: inputPlan.idee,
       platzierung: inputPlan.platzierung,
-      veröffentlichkeitsdatum: inputPlan.veröffentlichkeitsdatum,
+      voe: inputPlan.voe, // angepasst
       status: "DRAFT", // Initialstatus im RedakPlan
       publiziert: false,
       locationId: inputPlan.locationId,
