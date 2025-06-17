@@ -1,13 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // output: 'standalone', // Auskommentiert für normalen Mode
+  // KEIN output: 'standalone' mehr!
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
     },
   },
-  swcMinify: false,
-  productionBrowserSourceMaps: true,
 }
 
 export default nextConfig
