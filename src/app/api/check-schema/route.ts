@@ -5,21 +5,23 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Hole einen User ohne password Feld
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true
-      },
-      take: 5
-    });
+    // Prüfe welche Spalten existieren mit raw SQL
+    const columns = await prisma.$queryRaw`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'User'
+      ORDER BY ordinal_position
+    `;
+    
+    // Zähle User
+    const userCount = await prisma.$queryRaw`
+      SELECT COUNT(*) as count FROM "User"
+    `;
     
     return NextResponse.json({ 
-      users,
-      message: "Schema check successful"
+      existingColumns: columns,
+      userCount: userCount,
+      message: "Schema check completed"
     });
   } catch (error) {
     return NextResponse.json({ 

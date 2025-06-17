@@ -13,25 +13,75 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid token" }, { status: 403 });
     }
     
-    // Führe raw SQL aus
-    await prisma.$executeRaw`
-      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "password" TEXT
-    `;
+    const fixes = [];
     
-    // Setze Default-Passwort
-    await prisma.$executeRaw`
-      UPDATE "User" 
-      SET "password" = '$2a$10$DJk03IntjCaiqCn3QTCGJuTFI8UNTvnGiQ/w9/620ziMlnwRo9l6i'
-      WHERE "password" IS NULL
-    `;
+    // 1. Füge role Spalte hinzu
+    try {
+      await prisma.$executeRaw`
+        ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "role" TEXT DEFAULT 'USER'
+      `;
+      fixes.push("Added role column");
+    } catch (e) {
+      fixes.push(`Role column error: ${e}`);
+    }
     
-    // Mache password NOT NULL
-    await prisma.$executeRaw`
-      ALTER TABLE "User" ALTER COLUMN "password" SET NOT NULL
+    // 2. Füge password Spalte hinzu
+    try {
+      await prisma.$executeRaw`
+        ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "password" TEXT
+      `;
+      fixes.push("Added password column");
+    } catch (e) {
+      fixes.push(`Password column error: ${e}`);
+    }
+    
+    // 3. Setze Default-Passwort für alle User ohne Passwort
+    try {
+      await prisma.$executeRaw`
+        UPDATE "User" 
+        SET "password" = '$2a$10$DJk03IntjCaiqCn3QTCGJuTFI8UNTvnGiQ/w9/620ziMlnwRo9l6i'
+        WHERE "password" IS NULL
+      `;
+      fixes.push("Set default passwords");
+    } catch (e) {
+      fixes.push(`Password update error: ${e}`);
+    }
+    
+    // 4. Setze Admin-Role für admin@example.com
+    try {
+      await prisma.$executeRaw`
+        UPDATE "User" 
+        SET "role" = 'ADMIN'
+        WHERE "email" = 'admin@example.com'
+      `;
+      fixes.push("Set admin role");
+    } catch (e) {
+      fixes.push(`Admin role error: ${e}`);
+    }
+    
+    // 5. Mache password NOT NULL
+    try {
+      await prisma.$executeRaw`
+        ALTER TABLE "User" ALTER COLUMN "password" SET NOT NULL
+      `;
+      fixes.push("Made password NOT NULL");
+    } catch (e) {
+      fixes.push(`Password NOT NULL error: ${e}`);
+    }
+    
+    // Zeige aktuelle Spalten
+    const columns = await prisma.$queryRaw`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'User'
+      ORDER BY ordinal_position
     `;
     
     return NextResponse.json({ 
-      message: "Schema fixed! Password column added. Default password is: admin123"
+      message: "Schema fix attempted",
+      fixes: fixes,
+      currentColumns: columns,
+      defaultPassword: "admin123"
     });
   } catch (error) {
     console.error("Schema fix error:", error);
