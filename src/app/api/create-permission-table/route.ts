@@ -21,13 +21,22 @@ export async function GET() {
       ON "Permission"("userLocationId", "name");
     `;
 
-    await prisma.$executeRaw`
-      ALTER TABLE "Permission" 
-      ADD CONSTRAINT IF NOT EXISTS "Permission_userLocationId_fkey" 
-      FOREIGN KEY ("userLocationId") 
-      REFERENCES "UserLocation"("id") 
-      ON DELETE CASCADE;
+    // Prüfe ob Constraint existiert bevor wir ihn hinzufügen
+    const constraintExists = await prisma.$queryRaw`
+      SELECT 1 FROM information_schema.table_constraints 
+      WHERE constraint_name = 'Permission_userLocationId_fkey'
+      AND table_name = 'Permission';
     `;
+
+    if ((constraintExists as any[]).length === 0) {
+      await prisma.$executeRaw`
+        ALTER TABLE "Permission" 
+        ADD CONSTRAINT "Permission_userLocationId_fkey" 
+        FOREIGN KEY ("userLocationId") 
+        REFERENCES "UserLocation"("id") 
+        ON DELETE CASCADE;
+      `;
+    }
 
     return NextResponse.json({ 
       message: "Permission table created successfully" 
