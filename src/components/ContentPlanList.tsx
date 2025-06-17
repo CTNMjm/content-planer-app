@@ -783,7 +783,7 @@ export default function ContentPlanList() {
             setShowConvertModal(false);
             setSelectedPlan(null);
           }}
-          contentPlan={selectedPlan}
+          contentPlan={selectedPlan as ContentPlan} // Type Assertion hier!
           onSuccess={handleConvertSuccess}
         />
       )}
