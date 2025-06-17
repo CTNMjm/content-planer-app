@@ -9,6 +9,10 @@ const nextConfig = {
   // Deaktiviere Minification für Debugging
   swcMinify: false,
   productionBrowserSourceMaps: true,
+  // Force rebuild
+  env: {
+    BUILD_ID: Date.now().toString(),
+  },
 }
 
-export default nextConfig  // Verwende export default statt module.exports
+export default nextConfig
