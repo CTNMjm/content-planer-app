@@ -29,16 +29,16 @@ interface ContentPlan {
 interface ConvertToInputModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
-  selectedLocation?: string;
+  contentPlan: ContentPlan | null; // <--- hinzufügen!
+  onSuccess: () => Promise<void>;
 }
 
-export default function ConvertToInputModal({
+const ConvertToInputModal = ({
   isOpen,
   onClose,
+  contentPlan,
   onSuccess,
-  selectedLocation,
-}: ConvertToInputModalProps) {
+}: ConvertToInputModalProps) => {
   const { data: session } = useSession();
   const [contentPlans, setContentPlans] = useState<ContentPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<ContentPlan | null>(null);
@@ -48,12 +48,12 @@ export default function ConvertToInputModal({
     if (isOpen) {
       fetchApprovedContentPlans();
     }
-  }, [isOpen, selectedLocation]);
+  }, [isOpen, contentPlan]);
 
   const fetchApprovedContentPlans = async () => {
     try {
       const params = new URLSearchParams();
-      if (selectedLocation) params.append("locationId", selectedLocation);
+      if (contentPlan) params.append("locationId", contentPlan.locationId);
       params.append("status", "APPROVED");
 
       const url = `/api/content-plans?${params}`;
@@ -391,3 +391,5 @@ export default function ConvertToInputModal({
     </div>
   );
 }
+
+export default ConvertToInputModal;

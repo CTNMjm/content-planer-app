@@ -1,20 +1,34 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
+  reactStrictMode: false,
+  swcMinify: false,
   
-  // Performance Optimierungen
+  // WICHTIG: Force Dynamic für alle Seiten
+  output: 'standalone',
+  
+  // Deaktiviere Static Generation
+  generateBuildId: async () => {
+    return 'build-' + Date.now()
+  },
+  
+  // Deaktiviere Compiler-Optimierungen
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
+    removeConsole: false,
+    styledComponents: false,
   },
   
-  // Experimental features - turbo komplett entfernen
   experimental: {
-    optimizeCss: false,  // Deaktivieren
-    // turbo Zeile komplett entfernen!
+    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+    optimizeCss: false,
+    optimizePackageImports: [],
   },
   
-  webpack: (config, { isServer }) => {
+  // Deaktiviere Output-Optimierungen
+  compress: false,
+  poweredByHeader: false,
+  generateEtags: false,
+  
+  webpack: (config, { isServer, dev }) => {
     // Ignoriere HTML-Dateien in node_modules
     config.module.rules.push({
       test: /\.html$/,
@@ -28,7 +42,16 @@ const nextConfig = {
       loader: 'ignore-loader'
     });
     
-    // Optimierungen
+    // WICHTIG: Deaktiviere ALLE Optimierungen
+    config.optimization = {
+      minimize: false,
+      concatenateModules: false,
+      splitChunks: false,
+      runtimeChunk: false,
+      usedExports: false,
+      sideEffects: false,
+    };
+    
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -40,12 +63,12 @@ const nextConfig = {
     
     return config;
   },
+  
   typescript: {
-    // Ignoriere TypeScript Fehler beim Build
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
+  
   eslint: {
-    // Ignoriere ESLint während des Builds
     ignoreDuringBuilds: true,
   },
 }

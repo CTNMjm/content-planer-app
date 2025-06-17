@@ -35,6 +35,11 @@ interface ContentPlan {
   updatedAt: string;
 }
 
+// NEU: Erweitere ContentPlan um locationId
+interface ContentPlanWithLocationId extends ContentPlan {
+  locationId: string;
+}
+
 export default function ContentPlanList() {
   const router = useRouter();
   const [contentPlans, setContentPlans] = useState<ContentPlan[]>([]);
@@ -44,7 +49,7 @@ export default function ContentPlanList() {
   const [showModal, setShowModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState<ContentPlan | null>(null);        
   const [showConvertModal, setShowConvertModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<ContentPlan | null>(null);      
+  const [selectedPlan, setSelectedPlan] = useState<ContentPlanWithLocationId | null>(null); // <-- Typ ändern!
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   // Pagination States
@@ -231,7 +236,10 @@ export default function ContentPlanList() {
       alert('Nur Pläne mit Status "Freigegeben" können in den Input-Plan übernommen werden.');
       return;
     }
-    setSelectedPlan(plan);
+    setSelectedPlan({
+      ...plan,
+      locationId: plan.location.id, // <--- locationId ergänzen!
+    });
     setShowConvertModal(true);
   };
 
@@ -770,7 +778,7 @@ export default function ContentPlanList() {
 
       {showConvertModal && selectedPlan && (
         <ConvertToInputModal
-          isOpen={showConvertModal}
+          isOpen={true}
           onClose={() => {
             setShowConvertModal(false);
             setSelectedPlan(null);
