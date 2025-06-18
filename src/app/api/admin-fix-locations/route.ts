@@ -10,11 +10,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Hole alle ContentPlans ohne Location (mit korrekter Prisma Syntax)
+    // Hole alle ContentPlans ohne Location
     const contentPlansWithoutLocation = await prisma.contentPlan.findMany({
       where: { 
         locationId: {
-          equals: null
+          isNull: true
         }
       }
     });
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       const result = await prisma.contentPlan.updateMany({
         where: { 
           locationId: {
-            equals: null
+            isNull: true
           }
         },
         data: { locationId: defaultLocation.id }
