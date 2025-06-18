@@ -1,7 +1,21 @@
 #!/usr/bin/env node
-console.log("Starting Next.js application...");
-// Wrapper für Coolify Deploymentpm", ["run", "start"], {
-// Leitet zu Next.js Standard-Start um
-console.log('Starting Next.js application...');
+
+// Coolify Wrapper - leitet zum Next.js Start um
+console.log('Starting Next.js application via wrapper...');
+
+const { spawn } = require('child_process');
+
+const child = spawn('npm', ['run', 'start'], {
+  stdio: 'inherit',
+  env: process.env,
+  shell: true
 });
-// Führe den normalen Next.js Start ausrequire('child_process').spawn('npm', ['run', 'start'], {  stdio: 'inherit',  env: process.env});
+
+child.on('error', (error) => {
+  console.error('Failed to start application:', error);
+  process.exit(1);
+});
+
+child.on('exit', (code) => {
+  process.exit(code);
+});
