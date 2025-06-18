@@ -16,21 +16,41 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Debug: Liste Dateien im Root
+    const files = await fs.readdir(process.cwd());
+    
     // Prüfe ob dump.sql existiert
     const dumpPath = path.join(process.cwd(), 'dump.sql');
     try {
       const stats = await fs.stat(dumpPath);
+      // Lese die ersten paar Zeilen für Debug
+      const content = await fs.readFile(dumpPath, 'utf-8');
+      const firstLines = content.split('\n').slice(0, 5).join('\n');
+      
       return NextResponse.json({ 
         message: 'Admin import endpoint ready',
         dumpFound: true,
-        dumpSize: `${(stats.size / 1024 / 1024 / 1024).toFixed(2)} GB`,
-        usage: 'POST to this endpoint to import the dump.sql'
+        dumpSize: `${(stats.size / 1024).toFixed(2)} KB`,
+        dumpSizeBytes: stats.size,
+        usage: 'POST to this endpoint to import the dump.sql',
+        debug: {
+          cwd: process.cwd(),
+          filesInRoot: files.filter(f => !f.startsWith('.')),
+          dumpPath: dumpPath,
+          firstLines: firstLines.substring(0, 200) + '...'
+        }
       });
-    } catch {
+    } catch (err) {
       return NextResponse.json({ 
         message: 'Admin import endpoint ready',
         dumpFound: false,
-        error: 'dump.sql not found in deployment'
+        error: 'dump.sql not found in deployment',
+        debug: {
+          cwd: process.cwd(),
+          filesInRoot: files.filter(f => !f.startsWith('.')),
+          dumpPath: dumpPath,
+          error: err instanceof Error ? err.message : 'Unknown error'
+        }
       });
     }
   } catch (error) {
