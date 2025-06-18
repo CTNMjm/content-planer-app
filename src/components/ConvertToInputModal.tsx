@@ -7,30 +7,28 @@ interface ContentPlan {
   id: string;
   monat: string;
   bezug: string;
-  mehrwert?: string;
+  mehrwert?: string | null;  // <-- null erlauben
   mechanikThema: string;
   idee: string;
   platzierung: string;
-  implementationLevel?: string;
-  creativeFormat?: string;
-  creativeBriefingExample?: string;
-  copyExample?: string;
-  copyExampleCustomized?: string;
-  firstCommentForEngagement?: string;
-  notes?: string;
-  action?: string;
-  status: string;
-  locationId: string;
+  status: "DRAFT" | "APPROVED" | "IN_PROGRESS" | "COMPLETED";
   location: {
+    id: string;
     name: string;
   };
+  locationId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ConvertToInputModalProps {
   isOpen: boolean;
   onClose: () => void;
-  contentPlan: ContentPlan | null; // <--- hinzufügen!
-  onSuccess: () => Promise<void>;
+  contentPlan: ContentPlan & { 
+    locationId: string;
+    mehrwert?: string | null;  // null explizit erlauben
+  };
+  onSuccess: () => void;
 }
 
 const ConvertToInputModal = ({
