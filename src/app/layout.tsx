@@ -1,5 +1,4 @@
-import './tailwind-imports.css'  // Neue Datei
-import './globals.css'  // Muss ganz oben stehen!
+import './globals.css'
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "./providers";
