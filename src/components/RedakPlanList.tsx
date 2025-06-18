@@ -13,7 +13,7 @@ interface RedakPlan {
   idee: string;
   platzierung: string;
   voe: string;
-  status: string;
+  status: "DRAFT" | "IN_PROGRESS" | "REVIEW" | "APPROVED" | "COMPLETED";  // string ersetzen!
   publiziert: boolean;
   locationId: string;
   location: {
@@ -86,7 +86,7 @@ export default function RedakPlanList() {
     }
   };
 
-  const handleSaveRedakPlan = async (plan: RedakPlan) => {
+  const handleSaveRedakPlan = async (plan: Omit<RedakPlan, 'location' | 'inputPlan' | 'createdAt' | 'updatedAt'>) => {
     try {
       const url = plan.id ? `/api/redakplan/${plan.id}` : '/api/redakplan';
       const method = plan.id ? 'PUT' : 'POST';

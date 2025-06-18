@@ -10,13 +10,23 @@ interface UserModalProps {
   user: any | null;
 }
 
+interface FormData {
+  name: string;
+  email: string;
+  password?: string;  // optional machen!
+  role: string;
+  locationId: string;
+  isActive: boolean;  // <-- hinzufügen!
+}
+
 export function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     email: "",
     name: "",
     password: "",
     role: "USER",
-    isActive: true,
+    locationId: "",
+    isActive: true,  // <-- hinzufügen!
   });
 
   useEffect(() => {
@@ -26,7 +36,8 @@ export function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
         name: user.name || "",
         password: "", // Passwort nicht vorausfüllen
         role: user.role,
-        isActive: user.isActive,
+        locationId: user.locationId || "",
+        isActive: user.isActive ?? true,  // <-- hinzufügen!
       });
     } else {
       setFormData({
@@ -34,7 +45,8 @@ export function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
         name: "",
         password: "",
         role: "USER",
-        isActive: true,
+        locationId: "",
+        isActive: true,  // <-- hinzufügen!
       });
     }
   }, [user]);
