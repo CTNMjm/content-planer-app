@@ -1,73 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from 'pg';
-import fs from 'fs/promises';
-import path from 'path';
-
-export const maxDuration = 300;
-export const dynamic = 'force-dynamic';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get('secret');
+    const email = searchParams.get('email');
     
     if (secret !== process.env.ADMIN_IMPORT_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Lese dump.sql
-    const dumpPath = path.join(process.cwd(), 'dump.sql');
-    const sqlContent = await fs.readFile(dumpPath, 'utf-8');
-    
-    // Suche nach INSERT Statements
-    const lines = sqlContent.split('\n');
-    const insertStatements = lines.filter(line => 
-      line.trim().toUpperCase().startsWith('INSERT INTO')
-    );
-    
-    // Analysiere welche Tabellen INSERTs haben
-    const tableInserts: Record<string, number> = {};
-    insertStatements.forEach(stmt => {
-      const match = stmt.match(/INSERT INTO public\."?(\w+)"?/i);
-      if (match) {
-        const tableName = match[1];
-        tableInserts[tableName] = (tableInserts[tableName] || 0) + 1;
-      }
-    });
-    
-    // Zeige auch COPY Statements (alternative zu INSERT)
-    const copyStatements = lines.filter(line => 
-      line.trim().toUpperCase().startsWith('COPY')
-    );
-    
-    const tableCopies: Record<string, number> = {};
-    copyStatements.forEach(stmt => {
-      const match = stmt.match(/COPY public\."?(\w+)"?/i);
-      if (match) {
-        const tableName = match[1];
-        tableCopies[tableName] = (tableCopies[tableName] || 0) + 1;
+    if (!email) {
+      return NextResponse.json({ error: 'Email parameter required' }, { status: 400 });
+    }
+
+    // Finde User mit allen Beziehungen
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        userLocations: {
+          include: {
+            location: true,
+            permissions: true
+          }
+        }
       }
     });
 
-    // Prüfe Dateigröße
-    const stats = await fs.stat(dumpPath);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Hole alle ContentPlans mit Location-Info
+    const allContentPlans = await prisma.contentPlan.findMany({
+      take: 5,
+      include: {
+        location: true,
+        inputPlans: {
+          include: {
+            redakPlans: true
+          }
+        }
+      }
+    });
+
+    // Prüfe welche Locations der User sehen darf
+    const userLocationIds = user.userLocations.map(ul => ul.locationId);
+
+    // Filtere ContentPlans nach User-Berechtigungen
+    const visibleContentPlans = allContentPlans.filter(cp => 
+      !cp.locationId || userLocationIds.includes(cp.locationId) || user.role === 'ADMIN'
+    );
 
     return NextResponse.json({
       success: true,
-      dumpInfo: {
-        size: `${(stats.size / 1024).toFixed(2)} KB`,
-        totalLines: lines.length,
-        insertStatements: insertStatements.length,
-        copyStatements: copyStatements.length,
-        tableInserts,
-        tableCopies,
-        sampleInserts: insertStatements.slice(0, 5).map(s => s.substring(0, 100) + '...'),
-        sampleCopies: copyStatements.slice(0, 5).map(s => s.substring(0, 100) + '...')
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        userLocations: user.userLocations.map(ul => ({
+          locationId: ul.locationId,
+          locationName: ul.location.name,
+          permissions: ul.permissions
+        }))
+      },
+      debug: {
+        totalContentPlans: await prisma.contentPlan.count(),
+        userLocationIds,
+        allContentPlansSample: allContentPlans.map(cp => ({
+          id: cp.id,
+          monat: cp.monat,
+          bezug: cp.bezug,
+          locationId: cp.locationId,
+          locationName: cp.location?.name || 'No location'
+        })),
+        visibleContentPlans: visibleContentPlans.length,
+        isAdmin: user.role === 'ADMIN'
       }
     });
   } catch (error) {
     return NextResponse.json({ 
-      error: 'Dump analysis failed', 
+      error: 'Debug failed', 
       details: error instanceof Error ? error.message : 'Unknown error' 
     }, { status: 500 });
   }
@@ -75,7 +90,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Secret prüfen
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get('secret');
     
@@ -83,179 +97,73 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // PostgreSQL Verbindung
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) {
-      return NextResponse.json({ error: 'Database URL not configured' }, { status: 500 });
-    }
-
-    const client = new Client({
-      connectionString: databaseUrl,
-      statement_timeout: 0,
-      query_timeout: 0,
+    // Hole alle ContentPlans ohne Location
+    const contentPlansWithoutLocation = await prisma.contentPlan.findMany({
+      where: { locationId: null }
     });
 
-    await client.connect();
+    // Hole die erste Location als Default
+    const defaultLocation = await prisma.location.findFirst();
 
-    try {
-      // Lese dump.sql
-      const dumpPath = path.join(process.cwd(), 'dump.sql');
-      console.log('Reading dump.sql from:', dumpPath);
-      
-      const sqlContent = await fs.readFile(dumpPath, 'utf-8');
-      console.log(`Dump size: ${(sqlContent.length / 1024).toFixed(2)} KB`);
+    if (!defaultLocation) {
+      return NextResponse.json({ error: 'No locations found' }, { status: 400 });
+    }
 
-      // Deaktiviere Constraints für schnelleren Import
-      await client.query('SET session_replication_role = replica;');
+    // Update alle ContentPlans ohne Location
+    let updated = 0;
+    if (contentPlansWithoutLocation.length > 0) {
+      const result = await prisma.contentPlan.updateMany({
+        where: { locationId: null },
+        data: { locationId: defaultLocation.id }
+      });
+      updated = result.count;
+    }
+
+    // Stelle sicher, dass Admin-User alle Locations sehen kann
+    const adminUser = await prisma.user.findFirst({
+      where: { role: 'ADMIN' }
+    });
+
+    if (adminUser) {
+      // Hole alle Locations
+      const allLocations = await prisma.location.findMany();
       
-      // Verarbeite COPY Statements speziell
-      const lines = sqlContent.split('\n');
-      let currentCopy: { table?: string; columns?: string; data: string[] } | null = null;
-      let processedCopyCommands = 0;
-      let processedStatements = 0;
-      let errors = 0;
-      
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        
-        // COPY Statement Start
-        if (line.trim().toUpperCase().startsWith('COPY')) {
-          // Wenn wir bereits ein COPY verarbeiten, führe es aus
-          if (currentCopy && currentCopy.table && currentCopy.data.length > 0) {
-            try {
-              const copyData = currentCopy.data.join('\n');
-              const copyCommand = `COPY ${currentCopy.table} ${currentCopy.columns || ''} FROM STDIN`;
-              
-              console.log(`Executing COPY for ${currentCopy.table} with ${currentCopy.data.length} rows`);
-              
-              // Verwende pg-copy-streams für bessere COPY Unterstützung
-              // Da wir das nicht haben, machen wir es mit INSERT
-              for (const dataLine of currentCopy.data) {
-                if (dataLine && dataLine !== '\\.') {
-                  const values = dataLine.split('\t');
-                  const columns = currentCopy.columns?.replace(/[()]/g, '').split(', ') || [];
-                  
-                  if (values.length > 0 && columns.length > 0) {
-                    const insertQuery = `INSERT INTO ${currentCopy.table} (${columns.join(', ')}) VALUES (${values.map((v, idx) => {
-                      if (v === '\\N') return 'NULL';
-                      if (v === 't') return 'true';
-                      if (v === 'f') return 'false';
-                      // Escape single quotes
-                      const escaped = v.replace(/'/g, "''");
-                      return `'${escaped}'`;
-                    }).join(', ')})`;
-                    
-                    try {
-                      await client.query(insertQuery);
-                      processedStatements++;
-                    } catch (err) {
-                      console.error(`Error inserting into ${currentCopy.table}:`, err);
-                      errors++;
-                    }
-                  }
+      // Erstelle UserLocation für jede Location, die der Admin noch nicht hat
+      for (const location of allLocations) {
+        const exists = await prisma.userLocation.findFirst({
+          where: {
+            userId: adminUser.id,
+            locationId: location.id
+          }
+        });
+
+        if (!exists) {
+          await prisma.userLocation.create({
+            data: {
+              userId: adminUser.id,
+              locationId: location.id,
+              permissions: {
+                create: {
+                  name: 'FULL_ACCESS'
                 }
               }
-              
-              processedCopyCommands++;
-            } catch (err) {
-              console.error(`Error processing COPY for ${currentCopy.table}:`, err);
-              errors++;
             }
-          }
-          
-          // Parse neues COPY Statement
-          const match = line.match(/COPY\s+public\."?(\w+)"?\s*(\([^)]+\))?\s+FROM\s+stdin/i);
-          if (match) {
-            currentCopy = {
-              table: `public."${match[1]}"`,
-              columns: match[2],
-              data: []
-            };
-          }
-        } 
-        // COPY Daten
-        else if (currentCopy && !line.startsWith('--')) {
-          if (line === '\\.') {
-            // Ende der COPY Daten - verarbeite sie
-            if (currentCopy.table && currentCopy.data.length > 0) {
-              try {
-                console.log(`Processing ${currentCopy.data.length} rows for ${currentCopy.table}`);
-                
-                for (const dataLine of currentCopy.data) {
-                  const values = dataLine.split('\t');
-                  const columns = currentCopy.columns?.replace(/[()]/g, '').split(', ') || [];
-                  
-                  if (values.length > 0 && columns.length > 0) {
-                    const insertQuery = `INSERT INTO ${currentCopy.table} (${columns.join(', ')}) VALUES (${values.map((v) => {
-                      if (v === '\\N') return 'NULL';
-                      if (v === 't') return 'true';
-                      if (v === 'f') return 'false';
-                      const escaped = v.replace(/'/g, "''");
-                      return `'${escaped}'`;
-                    }).join(', ')})`;
-                    
-                    try {
-                      await client.query(insertQuery);
-                      processedStatements++;
-                    } catch (err) {
-                      console.error(`Error inserting into ${currentCopy.table}:`, err);
-                      errors++;
-                    }
-                  }
-                }
-                
-                processedCopyCommands++;
-              } catch (err) {
-                console.error(`Error processing COPY for ${currentCopy.table}:`, err);
-                errors++;
-              }
-            }
-            currentCopy = null;
-          } else {
-            currentCopy.data.push(line);
-          }
-        }
-        // Normale SQL Statements
-        else if (!currentCopy && line.trim() && !line.trim().startsWith('--')) {
-          if (line.trim().endsWith(';')) {
-            try {
-              await client.query(line);
-              processedStatements++;
-            } catch (err) {
-              if (err instanceof Error && !err.message.includes('already exists')) {
-                console.error(`Error executing statement:`, err.message);
-                errors++;
-              }
-            }
-          }
+          });
         }
       }
-      
-      // Constraints wieder aktivieren
-      await client.query('SET session_replication_role = DEFAULT;');
-      
-      // ANALYZE für bessere Performance
-      console.log('Running ANALYZE...');
-      await client.query('ANALYZE;');
-      
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Import completed',
-        stats: {
-          processedCopyCommands,
-          processedStatements,
-          errors
-        }
-      });
-      
-    } finally {
-      await client.end();
     }
-    
+
+    return NextResponse.json({
+      success: true,
+      results: {
+        contentPlansWithoutLocation: contentPlansWithoutLocation.length,
+        updated,
+        defaultLocation: defaultLocation.name
+      }
+    });
   } catch (error) {
-    console.error('Import error:', error);
     return NextResponse.json({ 
-      error: 'Import failed', 
+      error: 'Fix failed', 
       details: error instanceof Error ? error.message : 'Unknown error' 
     }, { status: 500 });
   }
