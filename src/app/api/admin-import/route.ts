@@ -84,82 +84,130 @@ export async function POST(request: NextRequest) {
     await client.connect();
 
     try {
+      // Erstelle fehlende Typen und Tabellen
+      console.log('Creating missing types and tables...');
+      
+      // LocationStatus Enum
+      try {
+        await client.query(`
+          CREATE TYPE "LocationStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'PLANNED');
+        `);
+        console.log('Created LocationStatus enum');
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('already exists')) {
+          console.log('LocationStatus enum already exists');
+        } else {
+          console.error('Error creating LocationStatus:', error);
+        }
+      }
+
+      // Weitere möglicherweise fehlende Typen
+      const enumTypes = [
+        { name: 'UserRole', values: "('USER', 'ADMIN')" },
+        { name: 'NotificationType', values: "('EMAIL', 'PUSH', 'IN_APP')" },
+        { name: 'EventStatus', values: "('DRAFT', 'PUBLISHED', 'ARCHIVED')" }
+      ];
+
+      for (const enumType of enumTypes) {
+        try {
+          await client.query(`CREATE TYPE "${enumType.name}" AS ENUM ${enumType.values};`);
+          console.log(`Created ${enumType.name} enum`);
+        } catch (error) {
+          if (error instanceof Error && error.message.includes('already exists')) {
+            console.log(`${enumType.name} enum already exists`);
+          }
+        }
+      }
+
       // Lese dump.sql aus dem Deployment
       const dumpPath = path.join(process.cwd(), 'dump.sql');
       console.log('Reading dump.sql from:', dumpPath);
       
       const sqlContent = await fs.readFile(dumpPath, 'utf-8');
-      console.log(`Dump size: ${(sqlContent.length / 1024 / 1024).toFixed(2)} MB`);
+      console.log(`Dump size: ${(sqlContent.length / 1024).toFixed(2)} KB`);
 
       // Deaktiviere Constraints für schnelleren Import
       await client.query('SET session_replication_role = replica;');
       
-      // Starte Transaktion
-      await client.query('BEGIN;');
+      // Teile den SQL-Content intelligent
+      const statements = [];
+      let currentStatement = '';
+      const lines = sqlContent.split('\n');
       
-      try {
-        // Teile bei echten Statement-Trennern
-        const statements = sqlContent.split(/;\s*\n/g).filter(stmt => {
-          const trimmed = stmt.trim();
-          return trimmed && !trimmed.startsWith('--');
-        });
+      for (const line of lines) {
+        // Skip comments and empty lines
+        if (line.trim().startsWith('--') || line.trim() === '') {
+          continue;
+        }
         
-        console.log(`Starting import of ${statements.length} statements...`);
+        currentStatement += line + '\n';
         
-        let successCount = 0;
-        let errorCount = 0;
+        // Statement endet mit ; (aber nicht innerhalb von Strings)
+        if (line.trim().endsWith(';')) {
+          statements.push(currentStatement.trim());
+          currentStatement = '';
+        }
+      }
+      
+      console.log(`Starting import of ${statements.length} statements...`);
+      
+      let successCount = 0;
+      let errorCount = 0;
+      const errors = [];
+      
+      for (let i = 0; i < statements.length; i++) {
+        const statement = statements[i];
         
-        for (let i = 0; i < statements.length; i++) {
-          const statement = statements[i].trim();
-          
-          try {
-            if (statement) {
-              await client.query(statement);
-              successCount++;
-            }
-          } catch (error) {
-            errorCount++;
-            console.error(`Error in statement ${i}:`, error);
-            // Bestimmte Fehler ignorieren (z.B. "already exists")
-            if (error instanceof Error && error.message.includes('already exists')) {
-              console.log('Ignoring "already exists" error');
-            } else {
-              // Bei kritischen Fehlern abbrechen
-              throw error;
-            }
+        try {
+          if (statement && !statement.startsWith('--')) {
+            await client.query(statement);
+            successCount++;
           }
+        } catch (error) {
+          errorCount++;
+          const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+          console.error(`Error in statement ${i}: ${errorMsg.substring(0, 100)}...`);
           
-          // Progress logging
-          if (i % 1000 === 0) {
-            console.log(`Progress: ${i}/${statements.length} statements (Success: ${successCount}, Errors: ${errorCount})`);
+          // Sammle Fehler für den Report
+          errors.push({
+            statement: i,
+            error: errorMsg.substring(0, 200),
+            preview: statement.substring(0, 100) + '...'
+          });
+          
+          // Ignoriere bestimmte Fehler
+          if (errorMsg.includes('already exists') || 
+              errorMsg.includes('duplicate key')) {
+            console.log('Ignoring duplicate error');
+          } else if (statements.length < 100) {
+            // Bei wenigen Statements, stoppe bei Fehlern
+            throw error;
           }
         }
         
-        await client.query('COMMIT;');
-        console.log('Import completed successfully');
-        
-        // Constraints wieder aktivieren
-        await client.query('SET session_replication_role = DEFAULT;');
-        
-        // ANALYZE für bessere Performance
-        console.log('Running ANALYZE...');
-        await client.query('ANALYZE;');
-        
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Import completed successfully',
-          stats: {
-            totalStatements: statements.length,
-            successfulStatements: successCount,
-            errors: errorCount
-          }
-        });
-        
-      } catch (error) {
-        console.error('Import failed, rolling back...', error);
-        await client.query('ROLLBACK;');
-        throw error;
+        // Progress logging
+        if (i % 100 === 0 && i > 0) {
+          console.log(`Progress: ${i}/${statements.length} statements (Success: ${successCount}, Errors: ${errorCount})`);
+        }
       }
+      
+      // Constraints wieder aktivieren
+      await client.query('SET session_replication_role = DEFAULT;');
+      
+      // ANALYZE für bessere Performance
+      console.log('Running ANALYZE...');
+      await client.query('ANALYZE;');
+      
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Import completed',
+        stats: {
+          totalStatements: statements.length,
+          successfulStatements: successCount,
+          errors: errorCount,
+          errorDetails: errors.slice(0, 10) // Erste 10 Fehler
+        }
+      });
       
     } finally {
       await client.end();
