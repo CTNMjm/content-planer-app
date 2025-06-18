@@ -7,7 +7,7 @@ interface ContentPlan {
   id: string;
   monat: string;
   bezug: string;
-  mehrwert?: string | null;  // <-- null erlauben
+  mehrwert?: string | null;
   mechanikThema: string;
   idee: string;
   platzierung: string;
@@ -19,6 +19,16 @@ interface ContentPlan {
   locationId: string;
   createdAt: string;
   updatedAt: string;
+  
+  // Neue optionale Felder hinzufügen
+  implementationLevel?: string | null;
+  creativeFormat?: string | null;
+  creativeBriefingExample?: string | null;
+  copyExample?: string | null;
+  copyExampleCustomized?: string | null;
+  firstCommentForEngagement?: string | null;
+  notes?: string | null;
+  action?: string | null;
 }
 
 interface ConvertToInputModalProps {
