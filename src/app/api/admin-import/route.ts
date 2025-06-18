@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Client } from 'pg';
 import fs from 'fs/promises';
 import path from 'path';
+
+export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,9 +49,13 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    // Prüfe Dateigröße
+    const stats = await fs.stat(dumpPath);
+
     return NextResponse.json({
       success: true,
-      dumpAnalysis: {
+      dumpInfo: {
+        size: `${(stats.size / 1024).toFixed(2)} KB`,
         totalLines: lines.length,
         insertStatements: insertStatements.length,
         copyStatements: copyStatements.length,
@@ -59,8 +67,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json({ 
-      error: 'Dump check failed', 
+      error: 'Dump analysis failed', 
       details: error instanceof Error ? error.message : 'Unknown error' 
     }, { status: 500 });
   }
 }
+
+// ...existing POST function...
