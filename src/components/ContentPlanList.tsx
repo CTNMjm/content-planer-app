@@ -783,7 +783,10 @@ export default function ContentPlanList() {
             setShowConvertModal(false);
             setSelectedPlan(null);
           }}
-          contentPlan={selectedPlan as ContentPlan} // Type Assertion hier!
+          contentPlan={{
+            ...selectedPlan,
+            locationId: selectedPlan.location.id  // locationId explizit setzen
+          }}
           onSuccess={handleConvertSuccess}
         />
       )}
