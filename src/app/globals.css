@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind imports entfernen */
+/* Die werden jetzt über tailwind-imports.css geladen */
 
 :root {
   --background: #ffffff;
