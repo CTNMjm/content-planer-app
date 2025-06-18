@@ -162,7 +162,7 @@ const ConvertToInputModal = ({
       setSelectedPlan(null);
     } catch (error) {
       console.error("Fehler beim Übertragen:", error);
-      alert(`Fehler beim Übertragen: ${error.message}`);
+      alert(`Fehler beim Übertragen: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     } finally {
       setLoading(false);
     }
