@@ -22,7 +22,7 @@ interface ContentPlan {
   id: string;
   monat: string;
   bezug: string;
-  mehrwert?: string | null;
+  mehrwert?: string | null;  // <-- null hinzufügen!
   mechanikThema: string;
   idee: string;
   platzierung: string;
