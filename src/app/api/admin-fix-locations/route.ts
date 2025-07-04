@@ -10,34 +10,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Hole alle ContentPlans ohne Location
-    const contentPlansWithoutLocation = await prisma.contentPlan.findMany({
-      where: { 
-        locationId: {
-          isNull: true
-        }
-      }
-    });
-
-    // Hole die erste Location als Default
+      // Hole die erste Location als Default
     const defaultLocation = await prisma.location.findFirst();
-
     if (!defaultLocation) {
       return NextResponse.json({ error: 'No locations found' }, { status: 400 });
     }
 
-    let updated = 0;
-    if (contentPlansWithoutLocation.length > 0) {
-      const result = await prisma.contentPlan.updateMany({
-        where: { 
-          locationId: {
-            isNull: true
-          }
-        },
-        data: { locationId: defaultLocation.id }
-      });
-      updated = result.count;
-    }
+    // Update ALLE ContentPlans zur Default-Location
+    const result = await prisma.contentPlan.updateMany({
+      where: {}, // Leeres where = alle Einträge
+      data: { locationId: defaultLocation.id }
+    });
+
+    const updated = result.count;
 
     // Stelle sicher, dass Admin-User Zugriff auf alle Locations hat
     const adminUser = await prisma.user.findFirst({
@@ -71,15 +56,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      results: {
-        contentPlansWithoutLocation: contentPlansWithoutLocation.length,
-        updated,
-        defaultLocation: defaultLocation.name,
-        adminUserUpdated: adminUser ? true : false
-      }
-    });
+   return NextResponse.json({
+  success: true,
+  results: {
+    updated,  // Nur noch diese Info
+    defaultLocation: defaultLocation.name,
+    adminUserUpdated: adminUser ? true : false
+  }
+});
   } catch (error) {
     return NextResponse.json({ 
       error: 'Fix failed', 
