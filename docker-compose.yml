@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.contentplaner.rule=Host(`dev.cp-app.control-monitor.de`)"
+      - "traefik.http.routers.contentplaner.entryPoints=web,websecure"
+      - "traefik.http.routers.contentplaner.tls=true"
+      - "traefik.http.routers.contentplaner.tls.certresolver=letsencrypt"
+      - "traefik.http.services.contentplaner.loadbalancer.server.port=3000"
