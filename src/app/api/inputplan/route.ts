@@ -48,8 +48,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(inputPlan);
   } catch (error) {
     console.error("Error in POST /api/inputplan:", error);
+    
+    // Detailliertere Fehlerausgabe
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      
+      // Prisma-spezifische Fehler
+      if (error.message.includes("Foreign key constraint")) {
+        return NextResponse.json(
+          { error: "Ungültige Referenz (z.B. Location ID)" },
+          { status: 400 }
+        );
+      }
+      
+      if (error.message.includes("Unique constraint")) {
+        return NextResponse.json(
+          { error: "Dieser Eintrag existiert bereits" },
+          { status: 409 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: "Fehler beim Erstellen des Input-Plans" },
+      { 
+        error: "Fehler beim Erstellen des Input-Plans",
+        details: error instanceof Error ? error.message : "Unbekannter Fehler"
+      },
       { status: 500 }
     );
   }
