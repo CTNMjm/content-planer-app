@@ -8,7 +8,9 @@ interface InputPlanHistoryEntry {
   field: string;
   oldValue: string | null;
   newValue: string | null;
-  changedBy: {
+  changedBy: string;  // ← String, nicht Objekt!
+  changedById: string;
+  changedByUser?: {   // ← Optional, falls included
     id: string;
     name: string;
     email: string;
@@ -43,6 +45,7 @@ export default function InputPlanHistory({ inputPlanId, isOpen, onClose }: Input
       }
       
       const data = await response.json();
+      
       setHistory(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unbekannter Fehler");
@@ -159,7 +162,8 @@ export default function InputPlanHistory({ inputPlanId, isOpen, onClose }: Input
                         {getFieldDisplayName(entry.field)}
                       </span>
                       <p className="text-sm text-gray-600 mt-1">
-                        Geändert von {entry.changedBy.name} ({entry.changedBy.email})
+                        Geändert von {entry.changedByUser?.name || entry.changedBy} 
+                        {entry.changedByUser?.email && ` (${entry.changedByUser.email})`}
                       </p>
                     </div>
                     <span className="text-sm text-gray-500">

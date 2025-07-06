@@ -2,8 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+import jwt from "jsonwebtoken";
 
 console.log("InputPlan route.ts loaded successfully"); // DEBUG
+
+// Hilfsfunktion um User aus dem Request zu extrahieren
+async function getUserFromRequest(request: NextRequest) {
+  const token = request.headers.get("authorization")?.replace("Bearer ", "");
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined in environment variables");
+    }
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET as string);
+    return decoded.user;
+  } catch (error) {
+    console.error("JWT verification error:", error);
+    return null;
+  }
+}
 
 // GET - Alle InputPläne abrufen
 export async function GET(request: NextRequest) {
@@ -45,106 +67,52 @@ export async function GET(request: NextRequest) {
 // POST - Neuen InputPlan erstellen
 export async function POST(request: NextRequest) {
   console.log("POST /api/inputplan - Start"); // DEBUG
-  
+
   try {
-    const session = await getServerSession(authOptions);
-    console.log("POST /api/inputplan - Session:", session?.user?.email); // DEBUG
-    
-    if (!session) {
-      console.log("POST /api/inputplan - No session found"); // DEBUG
-      return NextResponse.json(
-        { error: "Nicht authentifiziert" },
-        { status: 401 }
-      );
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    console.log("POST /api/inputplan - Body received:", {
-      monat: body.monat,
-      locationId: body.locationId,
-      createdById: body.createdById,
-      contentPlanId: body.contentPlanId
-    }); // DEBUG nur wichtige Felder
-    
-    // Bereite die Daten vor und filtere ungültige Werte
-    const data: any = {
-      // Basis-Felder
-      monat: body.monat,
-      bezug: body.bezug,
-      mehrwert: body.mehrwert,
-      mechanikThema: body.mechanikThema,
-      idee: body.idee,
-      platzierung: body.platzierung,
-      
-      // Neue Felder vom ContentPlan
-      implementationLevel: body.implementationLevel || null,
-      creativeFormat: body.creativeFormat || null,
-      creativeBriefingExample: body.creativeBriefingExample || null,
-      copyExample: body.copyExample || null,
-      copyExampleCustomized: body.copyExampleCustomized || null,
-      firstCommentForEngagement: body.firstCommentForEngagement || null,
-      notes: body.notes || null,
-      action: body.action || null,
-      
-      // InputPlan spezifische Felder
-      status: body.status || "DRAFT",
-      zusatzinfo: body.zusatzinfo || "",
-      gptResult: body.gptResult || null,
-      n8nResult: body.n8nResult || null,
-      flag: body.flag || false,
-      voe: body.voe ? new Date(body.voe) : null,
-      voeDate: body.voeDate ? new Date(body.voeDate) : null,
-      
-      // Meta-Felder
-      locationId: body.locationId,
-      createdById: session.user.id,
-      updatedById: session.user.id,
-    };
+    const data = await request.json();
 
-    // Nur hinzufügen wenn contentPlanId vorhanden
-    if (body.contentPlanId) {
-      data.contentPlanId = body.contentPlanId;
-    }
+    // Entferne Felder, die nicht gesetzt werden dürfen
+    const { id, createdAt, updatedAt, createdBy, updatedBy, ...createData } = data;
 
-    console.log("POST /api/inputplan - Creating with data fields:", Object.keys(data));
-    console.log("Required fields check:");
-    console.log("- locationId:", data.locationId);
-    console.log("- createdById:", data.createdById);
-    console.log("- monat:", data.monat);
-    
-    // Validierung
-    if (!data.locationId || !data.createdById) {
-      console.error("Missing required fields!");
-      return NextResponse.json(
-        { error: "LocationId oder CreatedById fehlt" },
-        { status: 400 }
-      );
-    }
-
-    console.log("About to create InputPlan with prisma...");
-    
-    const inputPlan = await prisma.inputPlan.create({
+    // InputPlan anlegen
+    const created = await prisma.inputPlan.create({
       data: {
-        ...data,
-        createdById: session.user.id,
-        locationId: data.locationId,
+        ...createData,
+        createdById: user.id,
+        updatedById: user.id,
       },
-    });
-    
-    // NEU: Historie-Eintrag für neue Erstellung
-    await prisma.inputPlanHistory.create({
-      data: {
-        inputPlanId: inputPlan.id,
-        field: "created",
-        oldValue: null,
-        newValue: "Neuer InputPlan erstellt",
-        changedById: session.user.id,
+      include: {
+        location: true,
+        createdBy: {
+          select: { id: true, name: true, email: true }
+        },
+        updatedBy: {
+          select: { id: true, name: true, email: true }
+        }
       }
     });
 
-    console.log("InputPlan created successfully:", inputPlan.id);
+    // History-Eintrag anlegen
+    await prisma.inputPlanHistory.create({
+      data: {
+        inputPlanId: created.id,
+        action: "CREATE",
+        changedBy: user.name ?? user.email ?? user.id ?? "Unknown",
+        changedById: user.id,
+        newData: created,
+        previousData: Prisma.JsonNull,
+        changedAt: new Date(),
+      }
+    });
 
-    return NextResponse.json(inputPlan, { status: 201 });
+    console.log("InputPlan created successfully:", created.id);
+
+    return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error("Error creating input plan:", error);
     return NextResponse.json(
@@ -222,6 +190,30 @@ export async function PUT(request: NextRequest) {
       }
     });
 
+    try {
+      const fields = Object.keys(updateData);
+      for (const field of fields) {
+        if ((existingPlan as any)[field] !== (updatedPlan as any)[field]) {
+          await prisma.inputPlanHistory.create({
+            data: {
+              inputPlanId: id,
+              action: "UPDATE",
+              changedBy: session.user.name ?? session.user.email ?? session.user.id ?? "Unknown",
+              changedById: session.user.id,
+              field,
+              oldValue: (existingPlan as any)[field]?.toString() ?? null,
+              newValue: (updatedPlan as any)[field]?.toString() ?? null,
+              previousData: existingPlan,
+              newData: updatedPlan,
+              changedAt: new Date(),
+            }
+          });
+        }
+      }
+    } catch (historyError) {
+      console.error("Fehler beim Schreiben der History:", historyError);
+    }
+
     return NextResponse.json(updatedPlan);
   } catch (error) {
     console.error("Error updating input plan:", error);
@@ -275,6 +267,22 @@ export async function DELETE(request: NextRequest) {
     await prisma.inputPlan.delete({
       where: { id }
     });
+
+    try {
+      await prisma.inputPlanHistory.create({
+        data: {
+          inputPlanId: id,
+          action: "DELETE",
+          changedBy: session.user.name ?? session.user.email ?? session.user.id ?? "Unknown",
+          changedById: session.user.id,
+          previousData: existingPlan,
+          newData: Prisma.JsonNull,
+          changedAt: new Date(),
+        }
+      });
+    } catch (historyError) {
+      console.error("Fehler beim Schreiben der History (DELETE):", historyError);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

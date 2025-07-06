@@ -5,9 +5,11 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { ClockIcon } from "@heroicons/react/24/outline";
 // WICHTIG: Import des richtigen Modals
-import InputPlanModal from "@/app/inputplan/InputPlanModal";
+import { InputPlanModal } from "@/components/InputPlanModal";
 // Korrekter Import - default export
 import InputPlanHistory from "@/components/InputPlanHistory";
+import ConvertToRedakModal from "@/components/ConvertToRedakModal"; // Import hinzufügen
+import { toast } from "react-hot-toast";
 
 interface InputPlan {
   id: string;
@@ -30,7 +32,7 @@ interface InputPlan {
   gptResult?: string;
   n8nResult?: string;
   flag: boolean;
-  voe?: string;
+  voe?: string; // immer als ISO-String (z.B. "2024-07-05T00:00:00.000Z")
   voeDate?: string;
   status: "DRAFT" | "IN_PROGRESS" | "REVIEW" | "APPROVED" | "COMPLETED";
   location: {
@@ -79,6 +81,9 @@ export default function InputPlanList({
 
   // Nach den anderen States
   const [showCompleted, setShowCompleted] = useState(false);
+  const [showConvertModal, setShowConvertModal] = useState(false);
+  const [convertInputPlans, setConvertInputPlans] = useState<InputPlan[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchLocations();
@@ -86,7 +91,7 @@ export default function InputPlanList({
 
   useEffect(() => {
     fetchInputPlans();
-  }, [refreshKey]);
+  }, [refreshKey]); // Entferne locationId hier
 
   const fetchLocations = async () => {
     try {
@@ -115,17 +120,21 @@ export default function InputPlanList({
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      const response = await fetch(`/api/inputplan/${id}`, { // Geändert von "/api/input-plans/" zu "/api/inputplan/"
-        method: "PUT",
+      const response = await fetch(`/api/inputplan/${id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (response.ok) {
-        fetchInputPlans();
+      if (!response.ok) {
+        throw new Error("Status-Update fehlgeschlagen");
       }
+
+      toast.success("Status erfolgreich geändert");
+      fetchInputPlans(); // Liste neu laden
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.error("Status update error:", error);
+      toast.error("Fehler beim Ändern des Status");
     }
   };
 
@@ -145,65 +154,38 @@ export default function InputPlanList({
   };
 
   // Transfer Handler für Redaktionsplan
-  const handleTransferToRedakPlan = async (plan: InputPlan) => {
-    // Prüfen ob VÖ-Datum gesetzt ist
-    if (!plan.voe && !plan.voeDate) {
-      alert("Bitte setzen Sie zuerst ein Veröffentlichungsdatum (VÖ) für diesen Eintrag.");
+  const handleTransferToRedakPlan = async (inputPlan: InputPlan) => {
+    if (!inputPlan.voe && !inputPlan.voeDate) {
+      toast.error("Bitte setzen Sie zuerst ein Veröffentlichungsdatum (VÖ) für diesen Eintrag.");
       return;
     }
-
-    // Prüfen ob Status APPROVED ist
-    if (plan.status !== "APPROVED") {
-      alert("Nur freigegebene Einträge können in den Redaktionsplan übertragen werden.");
+    if (!window.confirm("Möchten Sie diesen Eintrag wirklich in den Redaktionsplan übertragen?")) {
       return;
     }
-
-    if (!confirm("Möchten Sie diesen Eintrag wirklich in den Redaktionsplan übertragen?")) {
-      return;
-    }
-
     try {
-      // Konvertiere voeDate zu einem Date-Objekt für RedakPlan
-      const voeDateTime = plan.voeDate ? new Date(plan.voeDate) : new Date(plan.voe!);
-      
-      const response = await fetch("/api/redakplan", {
+      const response = await fetch(`/api/inputplan/${inputPlan.id}/copy-to-redak`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          inputPlanId: plan.id,
-          monat: plan.monat,
-          bezug: plan.bezug,
-          mechanikThema: plan.mechanikThema,
-          idee: plan.idee,
-          platzierung: plan.platzierung,
-          voe: voeDateTime.toISOString(),
-          locationId: plan.locationId,
-          status: "DRAFT"
-        }),
       });
 
-      if (response.ok) {
-        // Nach erfolgreichem Transfer: Status auf COMPLETED setzen
-        const statusResponse = await fetch(`/api/inputplan/${plan.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "COMPLETED" }),
-        });
-
-        if (statusResponse.ok) {
-          alert("Erfolgreich in den Redaktionsplan übertragen und als abgeschlossen markiert!");
-        } else {
-          alert("Übertragen, aber Status konnte nicht aktualisiert werden.");
+      if (!response.ok) {
+        const error = await response.json();
+        
+        // Spezielle Behandlung für "bereits kopiert"
+        if (response.status === 409) {
+          toast.error("Dieser Eintrag wurde bereits in den Redaktionsplan übertragen.");
+          fetchInputPlans(); // Liste neu laden um Status zu aktualisieren
+          return;
         }
         
-        fetchInputPlans(); // Liste aktualisieren
-      } else {
-        const error = await response.json();
-        alert(`Fehler: ${error.message || "Übertragung fehlgeschlagen"}`);
+        throw new Error(error.error || "Transfer fehlgeschlagen");
       }
+
+      toast.success("Erfolgreich zu RedakPlan übertragen und abgeschlossen!");
+      fetchInputPlans(); // Liste neu laden
     } catch (error) {
-      console.error("Error transferring to RedakPlan:", error);
-      alert("Fehler beim Übertragen in den Redaktionsplan");
+      console.error("Transfer error:", error);
+      toast.error(error instanceof Error ? error.message : "Fehler beim Übertragen zu RedakPlan");
     }
   };
 
@@ -217,7 +199,7 @@ export default function InputPlanList({
   // Filter und Sortierung - COMPLETED ausschließen wenn nicht in der Abgeschlossen-Ansicht
   const filteredAndSortedPlans = inputPlans
     .filter((plan) => {
-      // Filter für abgeschlossene Einträge
+      // Filter für abgeschlossene/nicht abgeschlossene
       if (showCompleted) {
         return plan.status === "COMPLETED";
       } else {
@@ -225,26 +207,17 @@ export default function InputPlanList({
       }
     })
     .filter((plan) => {
-      // Location Filter
-      if (locationFilter !== "all" && plan.location.id !== locationFilter) {
-        return false;
-      }
-
-      // Suchbegriff Filter
-      if (searchTerm) {
-        const search = searchTerm.toLowerCase();
-        return (
-          plan.monat.toLowerCase().includes(search) ||
-          plan.bezug.toLowerCase().includes(search) ||
-          plan.idee.toLowerCase().includes(search) ||
-          plan.mechanikThema.toLowerCase().includes(search) ||
-          plan.platzierung.toLowerCase().includes(search) ||
-          (plan.mehrwert && plan.mehrwert.toLowerCase().includes(search)) ||
-          (plan.zusatzinfo && plan.zusatzinfo.toLowerCase().includes(search)) ||
-          plan.location.name.toLowerCase().includes(search)
-        );
-      }
-      return true;
+      // Suchfilter
+      if (!searchTerm) return true;
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        plan.monat.toLowerCase().includes(searchLower) ||
+        plan.bezug.toLowerCase().includes(searchLower) ||
+        plan.mechanikThema.toLowerCase().includes(searchLower) ||
+        plan.idee.toLowerCase().includes(searchLower) ||
+        plan.platzierung.toLowerCase().includes(searchLower) ||
+        plan.location.name.toLowerCase().includes(searchLower)
+      );
     })
     .sort((a, b) => {
       let compareValue = 0;
@@ -451,22 +424,38 @@ export default function InputPlanList({
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{plan.monat}</td>
                   <td className="px-6 py-4 text-sm">{plan.bezug}</td>
                   <td className="px-6 py-4 text-sm">{plan.mechanikThema}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-4 text-sm">
                     <select
                       value={plan.status}
                       onChange={(e) => handleStatusChange(plan.id, e.target.value)}
-                      className="text-sm border rounded px-2 py-1"
-                      disabled={showCompleted} // Disable bei abgeschlossenen
+                      className={`px-2 py-1 text-xs rounded-full font-medium border-0 cursor-pointer ${
+                        plan.status === "DRAFT"
+                          ? "bg-gray-100 text-gray-700"
+                          : plan.status === "IN_PROGRESS"
+                          ? "bg-blue-100 text-blue-700"
+                          : plan.status === "REVIEW"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : plan.status === "APPROVED"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-purple-100 text-purple-700"
+                      }`}
+                      disabled={plan.status === "COMPLETED"}
                     >
                       <option value="DRAFT">Entwurf</option>
                       <option value="IN_PROGRESS">In Bearbeitung</option>
                       <option value="REVIEW">Review</option>
                       <option value="APPROVED">Freigegeben</option>
-                      <option value="COMPLETED">Abgeschlossen</option>
+                      {plan.status === "COMPLETED" && (
+                        <option value="COMPLETED">Abgeschlossen</option>
+                      )}
                     </select>
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    {plan.voeDate ? new Date(plan.voeDate).toLocaleDateString('de-DE') : '-'}
+                    {plan.voeDate
+                      ? new Date(plan.voeDate).toLocaleDateString('de-DE')
+                      : plan.voe
+                        ? new Date(plan.voe).toLocaleDateString('de-DE')
+                        : '-'}
                   </td>
                   <td className="px-6 py-4 text-sm">{plan.location.name}</td>
                   <td className="px-6 py-4">
@@ -486,10 +475,14 @@ export default function InputPlanList({
                       </button>
                       {plan.status === "APPROVED" && !showCompleted && (
                         <button
-                          onClick={() => handleTransferToRedakPlan(plan)}
+                          onClick={() => {
+                            setSelectedIds(new Set([plan.id]));
+                            setConvertInputPlans([plan]);
+                            setShowConvertModal(true);
+                          }}
                           className={`text-sm font-medium ${
                             plan.voe || plan.voeDate
-                              ? "text-green-600 hover:text-green-900" 
+                              ? "text-green-600 hover:text-green-900"
                               : "text-gray-400 cursor-not-allowed"
                           }`}
                           disabled={!plan.voe && !plan.voeDate}
@@ -546,34 +539,38 @@ export default function InputPlanList({
                         </span>
                       )}
                     </div>
-                    <div className="flex justify-between items-center mt-2">
-                      <button
-                        onClick={(e) => {
+                    <div className="flex items-center justify-between mb-2">
+                      <select
+                        value={plan.status}
+                        onChange={(e) => {
                           e.stopPropagation();
-                          handleShowHistory(plan.id);
+                          handleStatusChange(plan.id, e.target.value);
                         }}
-                        className="text-gray-500 hover:text-gray-700"
-                        title="Historie anzeigen"
+                        onClick={(e) => e.stopPropagation()}
+                        className={`px-2 py-1 text-xs rounded-full font-medium border-0 cursor-pointer ${
+                          plan.status === "DRAFT"
+                            ? "bg-gray-100 text-gray-700"
+                            : plan.status === "IN_PROGRESS"
+                            ? "bg-blue-100 text-blue-700"
+                            : plan.status === "REVIEW"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : plan.status === "APPROVED"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-purple-100 text-purple-700"
+                        }`}
+                        disabled={plan.status === "COMPLETED"}
                       >
-                        <ClockIcon className="h-3.5 w-3.5" />
-                      </button>
-                      {plan.status === "APPROVED" && !showCompleted && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTransferToRedakPlan(plan);
-                          }}
-                          className={`text-xs font-medium py-1 px-2 rounded ${
-                            plan.voe || plan.voeDate
-                              ? "bg-green-100 text-green-700 hover:bg-green-200" 
-                              : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                          }`}
-                          disabled={!plan.voe && !plan.voeDate}
-                          title={!plan.voe && !plan.voeDate ? "VÖ-Datum erforderlich" : "In Redaktionsplan übertragen"}
-                        >
-                          → RedakPlan
-                        </button>
-                      )}
+                        <option value="DRAFT">Entwurf</option>
+                        <option value="IN_PROGRESS">In Bearbeitung</option>
+                        <option value="REVIEW">Review</option>
+                        <option value="APPROVED">Freigegeben</option>
+                        {plan.status === "COMPLETED" && (
+                          <option value="COMPLETED">Abgeschlossen</option>
+                        )}
+                      </select>
+                      <span className="text-xs text-gray-500">
+                        {plan.location.name}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -611,8 +608,64 @@ export default function InputPlanList({
       {/* Modal */}
       {showModal && (
         <InputPlanModal
-          item={editingPlan}
-          onClose={handleModalClose}
+          isOpen={showModal}
+          onClose={() => {
+            setShowModal(false);
+            setEditingPlan(null);
+          }}
+          inputPlan={editingPlan}
+          onSave={async (plan) => {
+            // Erstelle eine Kopie nur mit den Feldern für den PATCH-Body
+            const planToSave = {
+              contentPlanId: plan.contentPlanId,
+              monat: plan.monat,
+              bezug: plan.bezug,
+              mehrwert: plan.mehrwert,
+              mechanikThema: plan.mechanikThema,
+              idee: plan.idee,
+              platzierung: plan.platzierung,
+              implementationLevel: plan.implementationLevel,
+              creativeFormat: plan.creativeFormat,
+              creativeBriefingExample: plan.creativeBriefingExample,
+              copyExample: plan.copyExample,
+              copyExampleCustomized: plan.copyExampleCustomized,
+              firstCommentForEngagement: plan.firstCommentForEngagement,
+              notes: plan.notes,
+              action: plan.action,
+              zusatzinfo: plan.zusatzinfo,
+              gptResult: plan.gptResult,
+              n8nResult: plan.n8nResult,
+              flag: plan.flag,
+              voe: plan.voe,
+              voeDate: plan.voeDate,
+              status: plan.status,
+              locationId: plan.locationId,
+            };
+
+            // Konvertiere voe falls nötig
+            if (planToSave.voe && !planToSave.voe.includes("T")) {
+              planToSave.voe = new Date(planToSave.voe + "T00:00:00Z").toISOString();
+            }
+
+            const response = await fetch(`/api/inputplan/${plan.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(planToSave),
+            });
+            
+            console.log("PATCH URL:", `/api/inputplan/${plan.id}`);
+            console.log("PATCH Body:", planToSave);
+            
+            if (!response.ok) {
+              const error = await response.json();
+              toast.error(error.error || "Fehler beim Speichern");
+              return;
+            }
+            
+            toast.success("Änderungen gespeichert!");
+            fetchInputPlans();
+          }}
+          readOnly={false}
         />
       )}
 

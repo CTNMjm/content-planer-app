@@ -34,7 +34,7 @@ interface InputPlan {
   updatedAt?: string;
 }
 
-interface InputPlanModalProps {
+export interface InputPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
   inputPlan: InputPlan | null;
@@ -74,19 +74,46 @@ export function InputPlanModal({
     locationId: "",
   });
 
+  const [errors, setErrors] = useState<{ voe?: string }>({});
+
   useEffect(() => {
     if (inputPlan) {
       setFormData({
         ...inputPlan,
-        voe: inputPlan.voe ? new Date(inputPlan.voe).toISOString().split("T")[0] : "",
+        voe: inputPlan.voe
+          ? new Date(inputPlan.voe).toISOString().split("T")[0] // immer "YYYY-MM-DD"
+          : "",
       });
     }
   }, [inputPlan]);
 
+  const validateForm = () => {
+    const newErrors: { voe?: string } = {};
+
+    // Wenn Status APPROVED ist, muss VÖ-Datum gesetzt sein
+    if (formData.status === "APPROVED" && !formData.voe) {
+      newErrors.voe = "Veröffentlichungsdatum ist erforderlich für freigegebene Einträge";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      toast.error("Bitte korrigieren Sie die Fehler im Formular");
+      return;
+    }
+
     if (!readOnly) {
-      await onSave(formData);
+      // Nur beim Speichern in ISO-String umwandeln!
+      const planToSave = {
+        ...formData,
+        voe: formData.voe ? new Date(formData.voe + "T00:00:00Z").toISOString() : undefined,
+      };
+      await onSave(planToSave);
       onClose();
     }
   };
@@ -144,25 +171,45 @@ export function InputPlanModal({
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Monat *</label>
-                          <input
-                            type="text"
+                          <select
                             value={formData.monat}
                             onChange={(e) => setFormData({ ...formData, monat: e.target.value })}
                             disabled={readOnly}
                             required
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                          />
+                          >
+                            <option value="">Bitte wählen...</option>
+                            <option value="Januar">Januar</option>
+                            <option value="Februar">Februar</option>
+                            <option value="März">März</option>
+                            <option value="April">April</option>
+                            <option value="Mai">Mai</option>
+                            <option value="Juni">Juni</option>
+                            <option value="Juli">Juli</option>
+                            <option value="August">August</option>
+                            <option value="September">September</option>
+                            <option value="Oktober">Oktober</option>
+                            <option value="November">November</option>
+                            <option value="Dezember">Dezember</option>
+                          </select>
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">VOE Datum</label>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Veröffentlichungsdatum (VÖ) {formData.status === "APPROVED" && "*"}
+                          </label>
                           <input
                             type="date"
-                            value={formData.voe}
-                            onChange={(e) => setFormData({ ...formData, voe: e.target.value })}
+                            value={formData.voe || ""}
+                            onChange={e => setFormData({ ...formData, voe: e.target.value })}
                             disabled={readOnly}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded ${
+                              errors.voe
+                                ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                                : "border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                            } ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           />
+                          {errors.voe && <p className="mt-1 text-sm text-red-600">{errors.voe}</p>}
                         </div>
 
                         <div>
@@ -216,15 +263,23 @@ export function InputPlanModal({
                           <label className="block text-sm font-medium text-gray-700">Status</label>
                           <select
                             value={formData.status}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.value as InputPlan["status"] })}
+                            onChange={(e) => {
+                              const newStatus = e.target.value as InputPlan["status"];
+                              setFormData({ ...formData, status: newStatus });
+                              // Trigger Validierung wenn Status geändert wird
+                              if (newStatus === "APPROVED" && !formData.voe) {
+                                setErrors({ ...errors, voe: "Veröffentlichungsdatum ist erforderlich für freigegebene Einträge" });
+                              } else if (newStatus !== "APPROVED" && errors.voe) {
+                                setErrors({ ...errors, voe: undefined });
+                              }
+                            }}
                             disabled={readOnly}
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           >
                             <option value="DRAFT">Entwurf</option>
                             <option value="IN_PROGRESS">In Bearbeitung</option>
                             <option value="REVIEW">Review</option>
-                            <option value="APPROVED">Freigegeben</option>
-                            <option value="COMPLETED">Abgeschlossen</option>
+                            <option value="APPROVED">Freigabe</option>
                           </select>
                         </div>
 
@@ -391,22 +446,32 @@ export function InputPlanModal({
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end space-x-2">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-                    >
-                      {readOnly ? "Schließen" : "Abbrechen"}
-                    </button>
-                    {!readOnly && (
+                  <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-between">
+                    <div className="text-sm text-gray-500">
+                      {errors.voe && (
+                        <span className="text-red-600">
+                          Bitte beheben Sie die Fehler vor dem Speichern
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
                       <button
-                        type="submit"
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        type="button"
+                        onClick={onClose}
+                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
                       >
-                        Speichern
+                        {readOnly ? "Schließen" : "Abbrechen"}
                       </button>
-                    )}
+                      {!readOnly && (
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                          disabled={!!errors.voe}
+                        >
+                          Speichern
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </form>
               </Dialog.Panel>

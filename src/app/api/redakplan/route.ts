@@ -129,6 +129,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Nach erfolgreichem Erstellen des RedakPlans: Update des zugehörigen InputPlans
+    const { inputPlanId } = redakPlan;
+    await fetch(`${process.env.NEXTAUTH_URL}/api/inputplan/${inputPlanId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "COMPLETED", allowCompleted: true }),
+    });
+
     return NextResponse.json(redakPlan);
   } catch (error) {
     console.error("Error creating redak plan:", error);

@@ -1,0 +1,25 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Kopiere package.json und installiere Dependencies
+COPY package.json ./
+COPY package-lock.json* ./
+
+# Verwende npm install mit Legacy Peer Deps Flag
+RUN npm install --legacy-peer-deps
+
+# Kopiere Prisma und generiere
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# Kopiere alle Dateien
+COPY . .
+
+# Baue die App einmal
+RUN npm run build || true
+
+EXPOSE 3000
+
+# Nutze Production Server für Entwicklung
+CMD ["npm", "run", "start"]

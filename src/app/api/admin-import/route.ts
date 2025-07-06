@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Client } from 'pg';
 import fs from 'fs/promises';
 import path from 'path';
+import { prisma } from '@/lib/prisma';
+import jwt from 'jsonwebtoken';
+
+// Hilfsfunktion zum Extrahieren des Users aus dem Token
+async function getUserFromRequest(request: NextRequest) {
+  try {
+    const token = request.cookies.get('token')?.value;
+    if (!token) return null;
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, email: true, name: true }
+    });
+    
+    return user;
+  } catch {
+    return null;
+  }
+}
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
