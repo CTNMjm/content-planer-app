@@ -482,3 +482,30 @@ export function InputPlanModal({
     </Transition>
   );
 }
+
+const handleConvert = async () => {
+  // ... existing code ...
+  
+  // VOR dem fetch:
+  console.log("Sending InputPlan data:", inputPlanData);
+  console.log("LocationId:", selectedPlan.locationId);
+  console.log("ContentPlanId:", selectedPlan.id);
+  
+  const response = await fetch("/api/inputplan", {
+    // ... existing fetch config ...
+  });
+  
+  // NACH dem response check:
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Error response:", errorText);
+    
+    try {
+      const errorJson = JSON.parse(errorText);
+      console.error("Error details:", errorJson);
+      throw new Error(errorJson.error || errorJson.details || errorText || "Fehler beim Übertragen");
+    } catch (e) {
+      throw new Error(errorText || "Fehler beim Übertragen");
+    }
+  }
+}
