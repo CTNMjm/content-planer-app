@@ -115,7 +115,6 @@ const ConvertToInputModal = ({
         status: "DRAFT",
         locationId: selectedPlan.locationId,
         contentPlanId: selectedPlan.id,
-        createdById: session?.user?.id,
         
         // InputPlan spezifische Felder (initial leer)
         zusatzinfo: "",
@@ -126,27 +125,22 @@ const ConvertToInputModal = ({
         voeDate: null,
       };
 
-      console.log("Converting ContentPlan to InputPlan:", inputPlanData);
-      console.log("Session user ID:", session?.user?.id);
-      console.log("CreatedById field:", inputPlanData.createdById);
-      console.log("Starting fetch to /api/inputplan");
-
+      // WICHTIG: credentials: 'include' für Cookie-Weiterleitung
       const response = await fetch("/api/inputplan", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json" 
+        },
+        credentials: "include", // <-- WICHTIG für Session-Cookies
         body: JSON.stringify(inputPlanData),
       });
 
-      console.log("Response status:", response.status);
-      console.log("Response ok:", response.ok);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Error response text:", errorText);
+        console.error("Error response:", errorText);
         
         try {
           const errorJson = JSON.parse(errorText);
-          console.error("Error JSON:", errorJson);
           throw new Error(errorJson.error || errorText || "Fehler beim Übertragen");
         } catch (e) {
           throw new Error(errorText || "Fehler beim Übertragen");

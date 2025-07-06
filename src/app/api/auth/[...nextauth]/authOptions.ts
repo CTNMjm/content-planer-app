@@ -8,6 +8,7 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 Tage
   },
   providers: [
     CredentialsProvider({
@@ -56,9 +57,8 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session?.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string; // Und hier
+      if (session?.user && token?.sub) {
+        session.user.id = token.sub;
       }
       return session;
     },
