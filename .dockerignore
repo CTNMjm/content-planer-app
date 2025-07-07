@@ -1,11 +1,29 @@
+# Unnötige Ordner
 node_modules
 .next
+dist
+
+# Git
 .git
 .gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Umgebungen
 *.log
 .env
+.env.*
 .env.local
-.DS_Store
-Dockerfile*
-docker-compose*
+!.env.example
+
+# Nur Docker-Dev-Datei ignorieren (nicht den echten Dockerfile!)
+Dockerfile.dev
+
+# Compose-Dateien dürfen bleiben für Coolify!
+# docker-compose.override.yml ← nur ignorieren, wenn lokal nicht genutzt
+
+# Doku
 README.md
+LICENSE
