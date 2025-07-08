@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface InputPlan {
   id: string;
@@ -10,163 +10,202 @@ interface InputPlan {
   mechanikThema: string;
   idee: string;
   platzierung: string;
-  voe: Date | string;
+  voe?: string | null;
   zusatzinfo?: string;
   location?: {
     id: string;
     name: string;
   };
+  status?: string;
 }
 
 interface ConvertToRedakModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => Promise<void>;
   inputPlans: InputPlan[];
-  selectedIds: Set<string>;
-  onSuccess: () => void;
 }
 
 export default function ConvertToRedakModal({
   isOpen,
   onClose,
-  inputPlans,
-  selectedIds,
   onSuccess,
+  inputPlans,
 }: ConvertToRedakModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [redaktionshinweise, setRedaktionshinweise] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState<InputPlan | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) setSelectedPlan(null);
+  }, [isOpen]);
 
-  const selectedPlans = inputPlans.filter(plan => selectedIds.has(plan.id));
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+  const handleConvert = async () => {
+    if (!selectedPlan) return;
+    setLoading(true);
     try {
-      // Für jeden ausgewählten Plan einen Redak-Plan erstellen
-      const promises = selectedPlans.map(plan => 
-        fetch("/api/redakplan", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            inputPlanId: plan.id,
-            monat: plan.monat,
-            bezug: plan.bezug,
-            mehrwert: plan.mehrwert,
-            mechanikThema: plan.mechanikThema,
-            idee: plan.idee,
-            platzierung: plan.platzierung,
-            voe: plan.voe,
-            zusatzinfo: plan.zusatzinfo,
-            redaktionshinweise,
-            status: "IN_BEARBEITUNG",
-            locationId: plan.location?.id,
-          }),
-        })
-      );
+      const response = await fetch("/api/redakplan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inputPlanId: selectedPlan.id,
+          monat: selectedPlan.monat,
+          bezug: selectedPlan.bezug,
+          mehrwert: selectedPlan.mehrwert,
+          mechanikThema: selectedPlan.mechanikThema,
+          idee: selectedPlan.idee,
+          platzierung: selectedPlan.platzierung,
+          voe: selectedPlan.voe,
+          zusatzinfo: selectedPlan.zusatzinfo,
+          locationId: selectedPlan.location?.id,
+          status: "IN_BEARBEITUNG",
+        }),
+      });
 
-      const responses = await Promise.all(promises);
-      
-      // Prüfe ob alle erfolgreich waren
-      const failedCount = responses.filter(r => !r.ok).length;
-      
-      if (failedCount > 0) {
-        throw new Error(`${failedCount} von ${selectedPlans.length} Übertragungen fehlgeschlagen`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Fehler beim Übertragen");
       }
 
-      onSuccess();
+      // Status im InputPlan auf "COMPLETED" setzen
+      await fetch(`/api/inputplan/${selectedPlan.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "COMPLETED" }),
+      });
+
+      alert("Plan erfolgreich in Redak-Plan übertragen!");
+      await onSuccess();
+      onClose();
+      setSelectedPlan(null);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Fehler bei der Übertragung");
+      alert(error instanceof Error ? error.message : "Fehler beim Übertragen");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-end justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-          onClick={onClose}
-        />
-
-        <span className="hidden sm:inline-block sm:h-screen sm:align-middle">
-          &#8203;
-        </span>
-
-        <div className="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle">
-          <form onSubmit={handleSubmit}>
-            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="sm:flex sm:items-start">
-                <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900">
-                    In Redaktionsplan übertragen
-                  </h3>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      {selectedPlans.length} Input-Plan(e) werden in den Redaktionsplan übertragen.
-                    </p>
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold mb-4">Input-Plan in Redak-Plan übertragen</h2>
+        {!selectedPlan ? (
+          <>
+            <p className="text-gray-600 mb-4">
+              Wähle einen Input-Plan aus, der in den Redak-Plan übertragen werden soll:
+            </p>
+            {inputPlans.length === 0 ? (
+              <p className="text-gray-500 italic">Keine Input-Pläne verfügbar.</p>
+            ) : (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {inputPlans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    onClick={() => setSelectedPlan(plan)}
+                    className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{plan.idee}</h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Monat:</span> {plan.monat} | 
+                          <span className="font-medium ml-2">Standort:</span> {plan.location?.name} |
+                          <span className="font-medium ml-2">Bezug:</span> {plan.bezug}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Mechanik/Thema:</span> {plan.mechanikThema}
+                        </p>
+                      </div>
+                      <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-800">
+                        {plan.status}
+                      </span>
+                    </div>
                   </div>
-
-                  <div className="mt-4 space-y-4">
-                    <div>
-                      <label
-                        htmlFor="redaktionshinweise"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Redaktionshinweise für alle ausgewählten Einträge
-                      </label>
-                      <textarea
-                        id="redaktionshinweise"
-                        rows={4}
-                        value={redaktionshinweise}
-                        onChange={(e) => setRedaktionshinweise(e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        placeholder="Allgemeine Hinweise für die Redaktion..."
-                      />
-                    </div>
-
-                    <div className="bg-gray-50 p-3 rounded-md max-h-48 overflow-y-auto">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
-                        Ausgewählte Einträge:
-                      </h4>
-                      <ul className="text-sm space-y-1">
-                        {selectedPlans.map(plan => (
-                          <li key={plan.id} className="flex justify-between">
-                            <span className="text-gray-600">{plan.bezug}</span>
-                            <span className="text-gray-500">{plan.monat}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <h3 className="font-semibold mb-3">Ausgewählter Input-Plan:</h3>
+              <div className="mb-4">
+                <span className="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800 font-medium">
+                  {selectedPlan.status}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm text-gray-500">Monat</span>
+                    <p className="font-medium">{selectedPlan.monat}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Standort</span>
+                    <p className="font-medium">{selectedPlan.location?.name}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Bezug</span>
+                    <p className="font-medium">{selectedPlan.bezug}</p>
                   </div>
                 </div>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm text-gray-500">Mechanik/Thema</span>
+                    <p className="font-medium">{selectedPlan.mechanikThema}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Platzierung</span>
+                    <p className="font-medium">{selectedPlan.platzierung}</p>
+                  </div>
+                  {selectedPlan.mehrwert && (
+                    <div>
+                      <span className="text-sm text-gray-500">Mehrwert</span>
+                      <p className="font-medium">{selectedPlan.mehrwert}</p>
+                    </div>
+                  )}
+                </div>
               </div>
+              <div className="border-t pt-4 mb-4">
+                <span className="text-sm text-gray-500">Idee</span>
+                <p className="font-medium mt-1">{selectedPlan.idee}</p>
+              </div>
+              {/* Weitere Felder nach Bedarf */}
             </div>
-
-            <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="inline-flex w-full justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                {isLoading ? "Übertrage..." : `${selectedPlans.length} Einträge übertragen`}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isLoading}
-                className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Abbrechen
-              </button>
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                <strong>Hinweis:</strong> Dieser Input-Plan wird als neuer Redak-Plan mit Status "In Bearbeitung" erstellt.
+              </p>
             </div>
-          </form>
+          </>
+        )}
+        <div className="flex justify-end space-x-3 mt-6">
+          {selectedPlan && (
+            <button
+              onClick={() => setSelectedPlan(null)}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              disabled={loading}
+            >
+              Zurück
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            disabled={loading}
+          >
+            Abbrechen
+          </button>
+          {selectedPlan && (
+            <button
+              onClick={handleConvert}
+              disabled={loading}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              {loading ? "Übertrage..." : "In Redak-Plan übertragen"}
+            </button>
+          )}
         </div>
       </div>
     </div>

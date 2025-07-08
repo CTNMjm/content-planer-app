@@ -69,3 +69,34 @@ export async function DELETE(
     );
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+
+  if (!session || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { status } = await request.json();
+
+    if (!["ACTIVE", "INACTIVE"].includes(status)) {
+      return NextResponse.json({ error: "Ungültiger Status" }, { status: 400 });
+    }
+
+    const location = await prisma.location.update({
+      where: { id: params.id },
+      data: { status },
+    });
+
+    return NextResponse.json(location);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Fehler beim Aktualisieren des Status" },
+      { status: 500 }
+    );
+  }
+}

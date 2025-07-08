@@ -406,13 +406,14 @@ export default function AbgeschlossenContentPlans() {
             setIsModalOpen(false);
             setSelectedPlan(null);
           }}
-          contentPlan={selectedPlan}
+          contentPlan={{
+            ...selectedPlan,
+            mehrwert: selectedPlan.mehrwert ?? undefined,
+          }}
           onSave={async () => {
-            // Für abgeschlossene Pläne deaktivieren wir das Speichern
             alert("Abgeschlossene Pläne können nicht bearbeitet werden. Nutzen Sie 'Reaktivieren' um den Plan wieder zu bearbeiten.");
           }}
-          session={{ user: { role: 'viewer' } }} // Read-only Modus
-          readOnly={true} // Neues Prop für Read-only
+          readOnly={true}
         />
       )}
     </div>

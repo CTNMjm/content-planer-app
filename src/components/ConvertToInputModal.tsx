@@ -7,7 +7,7 @@ interface ContentPlan {
   id: string;
   monat: string;
   bezug: string;
-  mehrwert?: string;
+  mehrwert?: string | null;
   mechanikThema: string;
   idee: string;
   platzierung: string;
@@ -29,15 +29,15 @@ interface ContentPlan {
 interface ConvertToInputModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
-  selectedLocation?: string;
+  onSuccess: () => Promise<void>;
+  contentPlan: ContentPlan; // <--- HINZUGEFÜGT
 }
 
 export default function ConvertToInputModal({
   isOpen,
   onClose,
   onSuccess,
-  selectedLocation,
+  contentPlan, // <--- HINZUGEFÜGT
 }: ConvertToInputModalProps) {
   const { data: session } = useSession();
   const [contentPlans, setContentPlans] = useState<ContentPlan[]>([]);
@@ -48,12 +48,11 @@ export default function ConvertToInputModal({
     if (isOpen) {
       fetchApprovedContentPlans();
     }
-  }, [isOpen, selectedLocation]);
+  }, [isOpen, contentPlan]);
 
   const fetchApprovedContentPlans = async () => {
     try {
       const params = new URLSearchParams();
-      if (selectedLocation) params.append("locationId", selectedLocation);
       params.append("status", "APPROVED");
 
       const url = `/api/content-plans?${params}`;
@@ -154,7 +153,11 @@ export default function ConvertToInputModal({
       setSelectedPlan(null);
     } catch (error) {
       console.error("Fehler beim Übertragen:", error);
-      alert(`Fehler beim Übertragen: ${error.message}`);
+      let errorMessage = "Unbekannter Fehler";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      alert(`Fehler beim Übertragen: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

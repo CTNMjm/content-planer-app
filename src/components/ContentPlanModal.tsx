@@ -28,7 +28,7 @@ interface ContentPlan {
   id: string;
   monat: string;
   bezug: string;
-  mehrwert?: string;
+  mehrwert?: string | null;
   mechanikThema: string;
   platzierung: string;
   idee: string;
@@ -55,10 +55,12 @@ interface Location {
 
 interface ContentPlanModalProps {
   isOpen: boolean;
-  contentPlan: ContentPlan | null;
   onClose: () => void;
-  onSave: (data: ContentPlanFormData) => void;
-  selectedLocation?: string; // Neu: selectedLocation als Prop
+  contentPlan?: ContentPlan | null;
+  onSave: (plan: Partial<ContentPlan> & ContentPlanFormData) => Promise<void>;
+  readOnly?: boolean;
+  selectedLocation?: Location;
+  locations: Location[]; // <--- hinzufügen
 }
 
 export function ContentPlanModal({
@@ -92,6 +94,7 @@ export function ContentPlanModal({
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
   const [locationsLoading, setLocationsLoading] = useState(true);
+  const [newLocation, setNewLocation] = useState({ name: "", status: "ACTIVE" });
 
   // Lade Berechtigungen
   useEffect(() => {
@@ -108,6 +111,8 @@ export function ContentPlanModal({
   useEffect(() => {
     if (contentPlan && locations.length > 0) {
       setFormData({
+        ...formData,
+        locationId: contentPlan.location?.id || locations[0]?.id || "",
         monat: contentPlan.monat || "",
         bezug: contentPlan.bezug || "",
         mehrwert: contentPlan.mehrwert || "",
@@ -115,7 +120,6 @@ export function ContentPlanModal({
         platzierung: contentPlan.platzierung || "",
         idee: contentPlan.idee || "",
         status: contentPlan.status || "DRAFT",
-        locationId: contentPlan.location?.id || locations[0]?.id || "",
         // Neue Felder - immer mit || "" absichern
         implementationLevel: contentPlan.implementationLevel || "",
         creativeFormat: contentPlan.creativeFormat || "",
@@ -132,6 +136,7 @@ export function ContentPlanModal({
         locationId: locations[0].id || "",
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentPlan, locations]);
 
   // Nach Zeile 130 (nach dem contentPlan useEffect):
@@ -188,7 +193,7 @@ export function ContentPlanModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       // Validierung
       if (!formData.monat || !formData.bezug || !formData.mechanikThema || !formData.idee || !formData.platzierung || !formData.locationId) {
@@ -196,7 +201,12 @@ export function ContentPlanModal({
         return;
       }
 
-      await onSave(formData);
+      // Nur id und location mitgeben, wenn vorhanden (Bearbeiten)
+      const planToSave = contentPlan
+        ? { ...contentPlan, ...formData }
+        : { ...formData };
+
+      await onSave(planToSave);
       onClose();
     } catch (error) {
       console.error('Fehler beim Speichern:', error);
@@ -387,7 +397,7 @@ export function ContentPlanModal({
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium mb-2">
                           Standort *
                         </label>
                         <select
@@ -395,11 +405,11 @@ export function ContentPlanModal({
                           value={formData.locationId || ''}
                           onChange={handleChange}
                           required
-                          disabled={locationsLoading || locations.length === 0}
+                          disabled={locations.length === 0}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
                         >
                           <option value="">
-                            {locationsLoading ? "Lade..." : "Bitte wählen"}
+                            {locations.length === 0 ? "Keine Standorte verfügbar" : "Bitte wählen"}
                           </option>
                           {locations.map(location => (
                             <option key={location.id} value={location.id}>

@@ -49,6 +49,21 @@ export function InputPlanModal({
   onSave,
   readOnly = false,
 }: InputPlanModalProps) {
+  const MONATE = [
+    "Januar",
+    "Februar",
+    "März",
+    "April",
+    "Mai",
+    "Juni",
+    "Juli",
+    "August",
+    "September",
+    "Oktober",
+    "November",
+    "Dezember",
+  ];
+
   const [formData, setFormData] = useState<InputPlan>({
     id: "",
     monat: "",
@@ -85,10 +100,8 @@ export function InputPlanModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!readOnly) {
-      await onSave(formData);
-      onClose();
-    }
+    await onSave(formData);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -144,14 +157,20 @@ export function InputPlanModal({
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Monat *</label>
-                          <input
-                            type="text"
+                          <select
                             value={formData.monat}
                             onChange={(e) => setFormData({ ...formData, monat: e.target.value })}
                             disabled={readOnly}
                             required
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                          />
+                          >
+                            <option value="">Bitte wählen…</option>
+                            {MONATE.map((monat) => (
+                              <option key={monat} value={monat}>
+                                {monat}
+                              </option>
+                            ))}
+                          </select>
                         </div>
 
                         <div>
@@ -224,7 +243,6 @@ export function InputPlanModal({
                             <option value="IN_PROGRESS">In Bearbeitung</option>
                             <option value="REVIEW">Review</option>
                             <option value="APPROVED">Freigegeben</option>
-                            <option value="COMPLETED">Abgeschlossen</option>
                           </select>
                         </div>
 

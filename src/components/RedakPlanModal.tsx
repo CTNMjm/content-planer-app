@@ -7,18 +7,25 @@ import { toast } from "react-hot-toast";
 
 interface RedakPlan {
   id: string;
-  inputPlanId?: string;
   monat: string;
   bezug: string;
   mechanikThema: string;
   idee: string;
   platzierung: string;
   voe: string;
-  status: "DRAFT" | "IN_PROGRESS" | "REVIEW" | "APPROVED" | "COMPLETED";
+  status: "COMPLETED" | "DRAFT" | "IN_PROGRESS" | "REVIEW" | "APPROVED";
   publiziert: boolean;
   locationId: string;
-  createdAt?: string;
-  updatedAt?: string;
+  location: {
+    id: string;
+    name: string;
+  };
+  inputPlan?: {
+    id: string;
+    idee: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface RedakPlanModalProps {
@@ -49,6 +56,13 @@ export function RedakPlanModal({
     status: "DRAFT",
     publiziert: false,
     locationId: "",
+    location: {
+      id: "",
+      name: "",
+    },
+    inputPlan: null,
+    createdAt: "",
+    updatedAt: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,6 +86,13 @@ export function RedakPlanModal({
         status: "DRAFT",
         publiziert: false,
         locationId: locations[0]?.id || "",
+        location: {
+          id: locations[0]?.id || "",
+          name: locations[0]?.name || "",
+        },
+        inputPlan: null,
+        createdAt: "",
+        updatedAt: "",
       });
     }
   }, [redakPlan, locations]);
@@ -291,11 +312,17 @@ export function RedakPlanModal({
                         <div className="space-y-4 md:col-span-2">
                           <h3 className="font-semibold text-lg mb-3">Zusätzliche Informationen</h3>
                           
-                          {redakPlan.inputPlanId && (
+                          {redakPlan.inputPlan && (
                             <div>
                               <label className="block text-sm font-medium text-gray-700">Erstellt aus InputPlan</label>
                               <p className="mt-1 text-gray-900 bg-gray-50 p-2 rounded">
-                                ID: {redakPlan.inputPlanId}
+                                ID: {redakPlan.inputPlan.id}
+                                {redakPlan.inputPlan.idee && (
+                                  <>
+                                    <br />
+                                    Idee: {redakPlan.inputPlan.idee}
+                                  </>
+                                )}
                               </p>
                             </div>
                           )}

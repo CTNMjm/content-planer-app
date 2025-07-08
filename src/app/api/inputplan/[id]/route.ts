@@ -89,7 +89,12 @@ export async function PUT(
     } = data;
 
     // Erstelle History-Einträge für geänderte Felder
-    const historyEntries = [];
+    const historyEntries: Array<{
+      field: string;
+      oldValue: string;
+      newValue: string;
+      changedById: string;
+    }> = [];
     for (const [key, newValue] of Object.entries(updateData)) {
       const currentValue = currentPlan[key as keyof typeof currentPlan];
       if (currentValue !== newValue) {
@@ -157,21 +162,81 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    
-    // Nur Status aktualisieren
-    const inputPlan = await prisma.inputPlan.update({
-      where: { id: params.id },
-      data: {
-        status: body.status,
-        updatedById: session.user?.id,
-      }
+
+    // Entferne Felder, die nicht direkt gespeichert werden sollen
+    const {
+      id,
+      contentPlan,
+      location,
+      createdBy,
+      updatedBy,
+      createdAt,
+      updatedAt,
+      createdById,
+      updatedById,
+      locationId,
+      veröffentlichungsdatum,
+      ...updateData
+    } = body;
+
+    // Hole den aktuellen Stand für History-Vergleich
+    const currentPlan = await prisma.inputPlan.findUnique({
+      where: { id: params.id }
     });
 
-    return NextResponse.json(inputPlan);
+    if (!currentPlan) {
+      return NextResponse.json(
+        { error: "Input Plan nicht gefunden" },
+        { status: 404 }
+      );
+    }
+
+    // History-Einträge erzeugen
+    const historyEntries: Array<{
+      field: string;
+      oldValue: string;
+      newValue: string;
+      changedById: string;
+    }> = [];
+    for (const [key, newValue] of Object.entries(updateData)) {
+      const currentValue = currentPlan[key as keyof typeof currentPlan];
+      if (currentValue !== newValue) {
+        historyEntries.push({
+          field: key,
+          oldValue: String(currentValue ?? ""),
+          newValue: String(newValue ?? ""),
+          changedById: session.user.id
+        });
+      }
+    }
+
+    // Update und History in einer Transaktion
+    const updatedInputPlan = await prisma.$transaction(async (prisma) => {
+      const updated = await prisma.inputPlan.update({
+        where: { id: params.id },
+        data: {
+          ...updateData,
+          updatedById: session.user.id,
+        }
+      });
+
+      if (historyEntries.length > 0) {
+        await prisma.inputPlanHistory.createMany({
+          data: historyEntries.map(entry => ({
+            ...entry,
+            inputPlanId: params.id
+          }))
+        });
+      }
+
+      return updated;
+    });
+
+    return NextResponse.json(updatedInputPlan);
   } catch (error: any) {
-    console.error("Error updating input plan status:", error);
+    console.error("Error updating input plan:", error);
     return NextResponse.json(
-      { error: "Fehler beim Aktualisieren des Status" },
+      { error: "Fehler beim Aktualisieren des Input Plans" },
       { status: 500 }
     );
   }

@@ -53,6 +53,8 @@ export default function InputPlanHistory({ inputPlanId, isOpen, onClose }: Input
 
   const getFieldDisplayName = (field: string): string => {
     const fieldMap: { [key: string]: string } = {
+      created: "Erstellt",
+      created_from_contentplan: "Aus ContentPlan übertragen",
       status: "Status",
       monat: "Monat",
       datum: "Datum",
@@ -82,6 +84,14 @@ export default function InputPlanHistory({ inputPlanId, isOpen, onClose }: Input
 
   const formatValue = (field: string, value: string | null): string => {
     if (value === null || value === "") return "-";
+    
+    if (field === "created_from_contentplan") {
+      return value; // Zeigt den ContentPlan-Bezug
+    }
+    
+    if (field === "created") {
+      return value;
+    }
     
     if (field === "status") {
       const statusMap: { [key: string]: string } = {
