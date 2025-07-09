@@ -75,7 +75,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         data: {
           inputPlanId: inputPlan.id,
           action: "UPDATE",
-          changedBy: session.user.name || session.user.email || session.user.id || "System",
+          changedBy: { connect: { id: session.user.id } }, // <-- Korrigiert: Relation statt String
           changedById: session.user.id,
           field: "status",
           oldValue: inputPlan.status,
