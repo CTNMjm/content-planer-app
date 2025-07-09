@@ -330,33 +330,3 @@ export async function DELETE(
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }
-
-export async function history(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const history = await prisma.redakPlanHistory.findMany({
-      where: { redakPlanId: params.id },
-      orderBy: { changedAt: "desc" },
-      include: {
-        changedBy: {
-          select: { id: true, name: true, email: true }
-        }
-      }
-    });
-
-    return NextResponse.json(history);
-  } catch (error) {
-    console.error("Error fetching history:", error);
-    return NextResponse.json(
-      { error: "Fehler beim Laden der Historie" },
-      { status: 500 }
-    );
-  }
-}
