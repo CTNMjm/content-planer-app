@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
+import { authOptions } from "../../auth/[...nextauth]/authOptions";
 
 // Hilfsfunktion zum Extrahieren des Users aus dem Token
 async function getUserFromRequest(request: NextRequest) {
@@ -86,120 +86,211 @@ export async function GET(
 
     return NextResponse.json(inputPlan);
   } catch (error) {
-    console.error("GET error:", error);
-    return NextResponse.json({ error: "Failed to fetch InputPlan" }, { status: 500 });
+    console.error("Error fetching input plan:", error);
+    return NextResponse.json(
+      { error: "Fehler beim Laden des Input-Plans" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { error: "Nicht authentifiziert" },
+        { status: 401 }
+      );
+    }
+
+    const data = await request.json();
+    
+    // Hole den aktuellen Stand für History-Vergleich
+    const currentPlan = await prisma.inputPlan.findUnique({
+      where: { id: params.id }
+    });
+
+    if (!currentPlan) {
+      return NextResponse.json(
+        { error: "Input Plan nicht gefunden" },
+        { status: 404 }
+      );
+    }
+    
+    // Entferne alle Felder, die nicht direkt geupdated werden können
+    const {
+      id,
+      contentPlan,
+      location,
+      createdBy,
+      updatedBy,
+      createdAt,
+      updatedAt,
+      createdById,
+      updatedById,
+      locationId,
+      veröffentlichungsdatum,
+      ...updateData
+    } = data;
+
+    // Erstelle History-Einträge für geänderte Felder
+    const historyEntries: Array<{
+      field: string;
+      oldValue: string;
+      newValue: string;
+      changedById: string;
+    }> = [];
+    for (const [key, newValue] of Object.entries(updateData)) {
+      const currentValue = currentPlan[key as keyof typeof currentPlan];
+      if (currentValue !== newValue) {
+        historyEntries.push({
+          field: key,  // ÄNDERUNG: von 'fieldName' zu 'field'
+          oldValue: String(currentValue || ""),
+          newValue: String(newValue || ""),
+          changedById: session.user.id
+        });
+      }
+    }
+
+    // Update mit History in einer Transaktion
+    const updatedInputPlan = await prisma.$transaction(async (prisma) => {
+      // Update den InputPlan
+      const updated = await prisma.inputPlan.update({
+        where: { id: params.id },
+        data: {
+          ...updateData,
+          updatedById: session.user.id,
+        },
+        include: {
+          location: true,
+          contentPlan: true,
+          createdBy: true,
+          updatedBy: true,
+        },
+      });
+
+      // Erstelle History-Einträge
+      if (historyEntries.length > 0) {
+        await prisma.inputPlanHistory.createMany({
+          data: historyEntries.map(entry => ({
+            ...entry,
+            inputPlanId: params.id
+          }))
+        });
+      }
+
+      return updated;
+    });
+
+    return NextResponse.json(updatedInputPlan);
+  } catch (error) {
+    console.error("Error updating input plan:", error);
+    return NextResponse.json(
+      { error: "Fehler beim Aktualisieren des Input Plans" },
+      { status: 500 }
+    );
   }
 }
 
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Session holen!
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
+  }
+
   try {
     const user = await getUserFromRequest(request as NextRequest);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await request.json();
-    console.log("PATCH received data:", data);
+    const body = await request.json();
 
-    // "COMPLETED" darf nicht direkt gesetzt werden!
-    if (data.status === "COMPLETED" && !data.allowCompleted) {
-      return NextResponse.json({ error: "Status 'COMPLETED' kann nicht direkt gesetzt werden." }, { status: 400 });
-    }
+    // Entferne Felder, die nicht direkt gespeichert werden sollen
+    const {
+      id,
+      contentPlan,
+      location,
+      createdBy,
+      updatedBy,
+      createdAt,
+      updatedAt,
+      createdById,
+      updatedById,
+      locationId,
+      veröffentlichungsdatum,
+      ...updateData
+    } = body;
 
-    // Entferne read-only Felder
-    const { id, createdAt, updatedAt, createdBy, updatedBy, ...updateData } = data;
-
-    // Fix: allowCompleted darf NICHT an Prisma übergeben werden!
-    if ("allowCompleted" in updateData) {
-      delete updateData.allowCompleted;
-    }
-
-    // Fix für voe
-    if (updateData.voe && typeof updateData.voe === "string" && !updateData.voe.endsWith("Z")) {
-      updateData.voe = new Date(updateData.voe).toISOString();
-    }
-
-    const currentInputPlan = await prisma.inputPlan.findUnique({
+    // Hole den aktuellen Stand für History-Vergleich
+    const currentPlan = await prisma.inputPlan.findUnique({
       where: { id: params.id }
     });
 
-    if (!currentInputPlan) {
-      return NextResponse.json({ error: "InputPlan not found" }, { status: 404 });
+    if (!currentPlan) {
+      return NextResponse.json(
+        { error: "Input Plan nicht gefunden" },
+        { status: 404 }
+      );
     }
 
-    // Update durchführen
-    const updated = await prisma.inputPlan.update({
-      where: { id: params.id },
-      data: {
-        ...updateData,
-        updatedById: user.id,
-      },
-      include: {
-        location: true,
-        createdBy: {
-          select: { id: true, name: true, email: true }
-        },
-        updatedBy: {
-          select: { id: true, name: true, email: true }
-        }
+    // History-Einträge erzeugen
+    const historyEntries: Array<{
+      field: string;
+      oldValue: string;
+      newValue: string;
+      changedById: string;
+    }> = [];
+    for (const [key, newValue] of Object.entries(updateData)) {
+      const currentValue = currentPlan[key as keyof typeof currentPlan];
+      if (currentValue !== newValue) {
+        historyEntries.push({
+          field: key,
+          oldValue: String(currentValue ?? ""),
+          newValue: String(newValue ?? ""),
+          changedById: session.user.id
+        });
       }
+    }
+
+    // Update und History in einer Transaktion
+    const updatedInputPlan = await prisma.$transaction(async (prisma) => {
+      const updated = await prisma.inputPlan.update({
+        where: { id: params.id },
+        data: {
+          ...updateData,
+          updatedById: session.user.id,
+        }
+      });
+
+      if (historyEntries.length > 0) {
+        await prisma.inputPlanHistory.createMany({
+          data: historyEntries.map(entry => ({
+            ...entry,
+            inputPlanId: params.id
+          }))
+        });
+      }
+
+      return updated;
     });
 
-    // Feldweise History-Einträge
-    for (const field of Object.keys(updateData)) {
-      if (Object.prototype.hasOwnProperty.call(currentInputPlan, field)) {
-        const oldVal = currentInputPlan[field as keyof typeof currentInputPlan];
-        let newVal = updateData[field as keyof typeof updateData];
-        
-        // Normalisiere Werte für Vergleich
-        let normalizedOldVal: any = oldVal;
-        let normalizedNewVal: any = newVal;
-        
-        // Spezialbehandlung für Datumsfelder
-        if (field === 'voe' || field === 'voeDate') {
-          if (oldVal instanceof Date) {
-            normalizedOldVal = oldVal.toISOString();
-          }
-          if (typeof newVal === 'string') {
-            normalizedNewVal = new Date(newVal).toISOString();
-          }
-        }
-        
-        // Konvertiere null zu undefined für Vergleich
-        if (normalizedOldVal === null) normalizedOldVal = undefined;
-        if (normalizedNewVal === null) normalizedNewVal = undefined;
-        
-        // Vergleiche normalisierte Werte
-        const isChanged = normalizedOldVal !== normalizedNewVal;
-        
-        if (isChanged) {
-          console.log(`Field ${field} WIRKLICH geändert von "${oldVal}" zu "${newVal}"`);
-          
-          await prisma.inputPlanHistory.create({
-            data: {
-              inputPlanId: params.id,
-              action: "UPDATE",
-              changedBy: user.name ?? user.email ?? user.id ?? "Unknown",
-              changedById: user.id,
-              field,
-              oldValue: oldVal !== undefined && oldVal !== null ? String(oldVal) : null,
-              newValue: newVal !== undefined && newVal !== null ? String(newVal) : null,
-              previousData: currentInputPlan,
-              newData: updated,
-              changedAt: new Date(),
-            }
-          });
-        }
-      }
-    }
-
-    return NextResponse.json(updated);
-  } catch (error) {
-    console.error("Update error:", error);
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+    return NextResponse.json(updatedInputPlan);
+  } catch (error: any) {
+    console.error("Error updating input plan:", error);
+    return NextResponse.json(
+      { error: "Fehler beim Aktualisieren des Input Plans" },
+      { status: 500 }
+    );
   }
 }
 
@@ -226,8 +317,6 @@ export async function DELETE(
     await prisma.inputPlanHistory.create({
       data: {
         inputPlanId: params.id,
-        action: "DELETE",
-        changedBy: user.name ?? user.email ?? user.id ?? "Unknown",
         changedById: user.id,
         previousData: deleted,
         newData: Prisma.JsonNull,
@@ -239,5 +328,35 @@ export async function DELETE(
   } catch (error) {
     console.error("Delete error:", error);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+  }
+}
+
+export async function history(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const history = await prisma.redakPlanHistory.findMany({
+      where: { redakPlanId: params.id },
+      orderBy: { changedAt: "desc" },
+      include: {
+        changedBy: {
+          select: { id: true, name: true, email: true }
+        }
+      }
+    });
+
+    return NextResponse.json(history);
+  } catch (error) {
+    console.error("Error fetching history:", error);
+    return NextResponse.json(
+      { error: "Fehler beim Laden der Historie" },
+      { status: 500 }
+    );
   }
 }

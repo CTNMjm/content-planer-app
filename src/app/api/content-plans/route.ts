@@ -7,12 +7,10 @@ export const GET = async (req: NextRequest) => {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session) {
-      return NextResponse.json(
-        { error: "Nicht authentifiziert" },
-        { status: 401 }
-      );
+    if (!session?.user) {
+      return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
     }
+    // Ab hier ist session.user garantiert vorhanden!
 
     // Query Parameter auslesen
     const { searchParams } = new URL(req.url);
@@ -33,13 +31,13 @@ export const GET = async (req: NextRequest) => {
     }
 
     // Nur Locations des Users (optional - je nach Anforderung)
-    where.location = {
-      userLocations: {
-        some: {
-          userId: session.user.id
-        }
-      }
-    };
+    // where.location = {
+    //   userLocations: {
+    //     some: {
+    //       userId: session.user.id
+    //     }
+    //   }
+    // };
 
     // Hole gefilterte Content-Pläne
     const contentPlans = await prisma.contentPlan.findMany({
@@ -78,40 +76,65 @@ export const GET = async (req: NextRequest) => {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session) {
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
+    }
+
+    console.log("session.user.id:", session.user.id);
+
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id }
+    });
+    if (!dbUser) {
       return NextResponse.json(
-        { error: "Nicht authentifiziert" },
-        { status: 401 }
+        { error: "User für createdById nicht gefunden!" },
+        { status: 400 }
       );
     }
 
     const body = await request.json();
-    
+    console.log("Body empfangen:", body);
+    console.log(request.body)
+
+    const {
+      monat,
+      bezug,
+      mehrwert,
+      mechanikThema,
+      idee,
+      platzierung,
+      status,
+      locationId,
+      implementationLevel,
+      creativeFormat,
+      creativeBriefingExample,
+      copyExample,
+      copyExampleCustomized,
+      firstCommentForEngagement,
+      notes,
+      action
+    } = body;
+
     const contentPlan = await prisma.contentPlan.create({
       data: {
-        // Bestehende Felder
-        monat: body.monat,
-        bezug: body.bezug,
-        mehrwert: body.mehrwert,
-        mechanikThema: body.mechanikThema,
-        idee: body.idee,
-        platzierung: body.platzierung,
-        status: body.status || "DRAFT",
-        locationId: body.locationId,
+        monat,
+        bezug,
+        mehrwert,
+        mechanikThema,
+        idee,
+        platzierung,
+        status: status || "DRAFT",
+        locationId,
         createdById: session.user.id,
-        
-        // Neue Felder
-        implementationLevel: body.implementationLevel || null,
-        creativeFormat: body.creativeFormat || null,
-        creativeBriefingExample: body.creativeBriefingExample || null,
-        copyExample: body.copyExample || null,
-        copyExampleCustomized: body.copyExampleCustomized || null,
-        firstCommentForEngagement: body.firstCommentForEngagement || null,
-        notes: body.notes || null,
-        action: body.action || null,
-        
-        // Status-Tracking
+        implementationLevel: implementationLevel || null,
+        creativeFormat: creativeFormat || null,
+        creativeBriefingExample: creativeBriefingExample || null,
+        copyExample: copyExample || null,
+        copyExampleCustomized: copyExampleCustomized || null,
+        firstCommentForEngagement: firstCommentForEngagement || null,
+        notes: notes || null,
+        action: action || null,
         statusChangedAt: new Date(),
         statusChangedById: session.user.id,
       },

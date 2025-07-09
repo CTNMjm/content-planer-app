@@ -8,7 +8,11 @@ interface InputPlanHistoryEntry {
   field: string;
   oldValue: string | null;
   newValue: string | null;
-  changedBy: string;  // ← String, nicht Objekt!
+  changedBy: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+  } | string; // Fallback falls Backend nur String liefert
   changedById: string;
   changedByUser?: {   // ← Optional, falls included
     id: string;
@@ -162,8 +166,16 @@ export default function InputPlanHistory({ inputPlanId, isOpen, onClose }: Input
                         {getFieldDisplayName(entry.field)}
                       </span>
                       <p className="text-sm text-gray-600 mt-1">
-                        Geändert von {entry.changedByUser?.name || entry.changedBy} 
-                        {entry.changedByUser?.email && ` (${entry.changedByUser.email})`}
+                        Geändert von {
+                          typeof entry.changedBy === "object" && entry.changedBy !== null
+                            ? (entry.changedBy.name || entry.changedBy.email || entry.changedBy.id)
+                            : entry.changedBy
+                        }
+                        {
+                          typeof entry.changedBy === "object" && entry.changedBy?.email
+                            ? ` (${entry.changedBy.email})`
+                            : ""
+                        }
                       </p>
                     </div>
                     <span className="text-sm text-gray-500">

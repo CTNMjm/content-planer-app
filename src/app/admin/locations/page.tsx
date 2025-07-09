@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 interface Location {
   id: string;
   name: string;
-  isActive: boolean;
+  status: "ACTIVE" | "INACTIVE"; // <--- HIER ergänzen!
   createdAt: string;
   updatedAt: string;
 }
@@ -16,7 +16,7 @@ export default function LocationsPage() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newLocation, setNewLocation] = useState({ name: "", isActive: true });
+  const [newLocation, setNewLocation] = useState({ name: "", status: "ACTIVE" });
 
   useEffect(() => {
     fetchLocations();
@@ -38,15 +38,18 @@ export default function LocationsPage() {
 
   const handleCreate = async () => {
     try {
-      const response = await fetch("/api/locations", {
+      const response = await fetch("/api/admin/locations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newLocation),
+        body: JSON.stringify({
+          name: newLocation.name,
+          status: newLocation.status,
+        }),
       });
 
       if (response.ok) {
         setShowCreateModal(false);
-        setNewLocation({ name: "", isActive: true });
+        setNewLocation({ name: "", status: "ACTIVE" });
         fetchLocations();
       }
     } catch (error) {
@@ -91,7 +94,7 @@ export default function LocationsPage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
+                Name Test
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -113,12 +116,12 @@ export default function LocationsPage() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      location.isActive
+                      location.status === "ACTIVE"
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
                     }`}
                   >
-                    {location.isActive ? "Aktiv" : "Inaktiv"}
+                    {location.status === "ACTIVE" ? "Aktiv" : "Inaktiv"}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -126,10 +129,24 @@ export default function LocationsPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
-                    onClick={() => toggleActive(location.id, location.isActive)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-4"
+                    onClick={async () => {
+                      await fetch(`/api/locations/${location.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          status: location.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                        }),
+                      });
+                      // Danach Standortliste neu laden!
+                      fetchLocations();
+                    }}
+                    className={
+                      location.status === "ACTIVE"
+                        ? "text-red-600 hover:text-red-900 mr-4"
+                        : "text-green-600 hover:text-green-900 mr-4"
+                    }
                   >
-                    {location.isActive ? "Deaktivieren" : "Aktivieren"}
+                    {location.status === "ACTIVE" ? "Deaktivieren" : "Aktivieren"}
                   </button>
                 </td>
               </tr>
@@ -158,13 +175,16 @@ export default function LocationsPage() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={newLocation.isActive}
-                  onChange={(e) =>
-                    setNewLocation({ ...newLocation, isActive: e.target.checked })
+                  checked={newLocation.status === "ACTIVE"}
+                  onChange={e =>
+                    setNewLocation({
+                      ...newLocation,
+                      status: e.target.checked ? "ACTIVE" : "INACTIVE"
+                    })
                   }
                   className="mr-2"
                 />
-                <span className="text-sm">Aktiv</span>
+                <span>Aktiv</span>
               </label>
             </div>
             <div className="flex justify-end space-x-2">

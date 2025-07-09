@@ -34,19 +34,16 @@ interface ContentPlan {
 interface ConvertToInputModalProps {
   isOpen: boolean;
   onClose: () => void;
-  contentPlan: ContentPlan & { 
-    locationId: string;
-    mehrwert?: string | null;  // null explizit erlauben
-  };
-  onSuccess: () => void;
+  onSuccess: () => Promise<void>;
+  contentPlan: ContentPlan; // <--- HINZUGEFÜGT
 }
 
-const ConvertToInputModal = ({
+const ConvertToInputModal: React.FC<ConvertToInputModalProps> = ({
   isOpen,
   onClose,
   contentPlan,
   onSuccess,
-}: ConvertToInputModalProps) => {
+}) => {
   const { data: session } = useSession();
   const [contentPlans, setContentPlans] = useState<ContentPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<ContentPlan | null>(null);
@@ -61,7 +58,6 @@ const ConvertToInputModal = ({
   const fetchApprovedContentPlans = async () => {
     try {
       const params = new URLSearchParams();
-      if (contentPlan) params.append("locationId", contentPlan.locationId);
       params.append("status", "APPROVED");
 
       const url = `/api/content-plans?${params}`;
@@ -156,7 +152,11 @@ const ConvertToInputModal = ({
       setSelectedPlan(null);
     } catch (error) {
       console.error("Fehler beim Übertragen:", error);
-      alert(`Fehler beim Übertragen: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+      let errorMessage = "Unbekannter Fehler";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      alert(`Fehler beim Übertragen: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

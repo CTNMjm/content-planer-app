@@ -33,7 +33,9 @@ model User {
 
   // Historie
   contentPlanHistoryEntries ContentPlanHistory[]
-  inputPlanHistoryChanges   InputPlanHistory[]
+  inputPlanHistoryChanges InputPlanHistory[]
+  redakPlanHistory RedakPlanHistory[] @relation("UserRedakPlanHistory") // <--- Diese Zeile hinzufügen!
+
 }
 
 model UserRole {
@@ -44,9 +46,9 @@ model UserRole {
 }
 
 model Location {
-  id            String         @id @default(cuid())
-  name          String         @unique
-  status        String         @default("ACTIVE")
+  id     String  @id @default(cuid())
+  name   String  @unique
+  status String  @default("ACTIVE")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   contentPlans  ContentPlan[]
@@ -204,18 +206,17 @@ model InputPlan {
 model InputPlanHistory {
   id           String    @id @default(cuid())
   inputPlanId  String
-  inputPlan    InputPlan @relation(fields: [inputPlanId], references: [id])
-  action       String    @default("UPDATE") // <--- MUSS vorhanden sein!
-  changedBy    String    @default("System")
+  inputPlan    InputPlan @relation(fields: [inputPlanId], references: [id], onDelete: Cascade)
+  field        String?
+  oldValue     String?  @db.Text
+  newValue     String?  @db.Text
+  changedBy    User     @relation(fields: [changedById], references: [id])
   changedById  String
-  changedByUser User     @relation(fields: [changedById], references: [id])
   previousData Json?
   newData      Json?
   createdAt    DateTime  @default(now())
   changedAt    DateTime  @default(now())
-  field        String?
-  oldValue     String?
-  newValue     String?
+  
 }
 
 model RedakPlan {
@@ -227,6 +228,8 @@ model RedakPlan {
   idee          String
   platzierung   String
   voe           DateTime
+  zusatzinfo    String?
+  mehrwert      String?   // <--- HIER hinzugefügt
   status        ContentStatus @default(DRAFT)
   publiziert    Boolean       @default(false)
   locationId    String
@@ -238,6 +241,8 @@ model RedakPlan {
   inputPlan     InputPlan?    @relation(fields: [inputPlanId], references: [id])
   location      Location      @relation(fields: [locationId], references: [id])
   updatedBy     User?         @relation("RedakPlanUpdatedBy", fields: [updatedById], references: [id])
+
+  history RedakPlanHistory[]
 
   @@index([locationId])
   @@index([inputPlanId])
@@ -265,6 +270,27 @@ model ContentPlanHistory {
   metadata Json? // Zusätzliche Informationen
 
   @@index([contentPlanId])
+  @@index([changedById])
+  @@index([changedAt])
+}
+
+model RedakPlanHistory {
+  id           String    @id @default(cuid())
+  redakPlanId  String
+  redakPlan    RedakPlan @relation(fields: [redakPlanId], references: [id], onDelete: Cascade)
+
+  action    String
+  fieldName String?
+  oldValue  String? @db.Text
+  newValue  String? @db.Text
+
+  changedAt   DateTime @default(now())
+  changedById String
+  changedBy   User     @relation("UserRedakPlanHistory", fields: [changedById], references: [id])
+
+  metadata Json?
+
+  @@index([redakPlanId])
   @@index([changedById])
   @@index([changedAt])
 }

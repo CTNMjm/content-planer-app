@@ -1,9 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "react-hot-toast";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { useState, useEffect } from "react";
 
 interface InputPlan {
   id: string;
@@ -13,8 +10,7 @@ interface InputPlan {
   mechanikThema: string;
   idee: string;
   platzierung: string;
-  voe?: string;
-  voeDate?: string;
+  voe?: string | null;
   zusatzinfo?: string;
   implementationLevel?: string;
   creativeFormat?: string;
@@ -34,241 +30,190 @@ interface InputPlan {
 interface ConvertToRedakModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => Promise<void>;
   inputPlans: InputPlan[];
-  selectedIds: Set<string>;
-  onSuccess: () => void;
 }
 
 export default function ConvertToRedakModal({
   isOpen,
   onClose,
-  inputPlans,
-  selectedIds,
   onSuccess,
+  inputPlans,
 }: ConvertToRedakModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [redaktionshinweise, setRedaktionshinweise] = useState("");
-  const [currentPlanIndex, setCurrentPlanIndex] = useState(0);
+  const [selectedPlan, setSelectedPlan] = useState<InputPlan | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) setSelectedPlan(null);
+  }, [isOpen]);
 
-  const selectedPlans = inputPlans.filter(plan => selectedIds.has(plan.id));
-  const currentPlan = selectedPlans[currentPlanIndex];
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+  const handleConvert = async () => {
+    if (!selectedPlan) return;
+    setLoading(true);
     try {
-      const promises = selectedPlans.map(async (plan) => {
-        if (!plan.voe && !plan.voeDate) {
-          throw new Error(`VÖ-Datum fehlt für: ${plan.bezug}`);
-        }
-
-        const response = await fetch(`/api/inputplan/${plan.id}/copy-to-redak`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || `Fehler bei ${plan.bezug}`);
-        }
-
-        return response;
+      const response = await fetch("/api/redakplan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inputPlanId: selectedPlan.id,
+          monat: selectedPlan.monat,
+          bezug: selectedPlan.bezug,
+          mehrwert: selectedPlan.mehrwert,
+          mechanikThema: selectedPlan.mechanikThema,
+          idee: selectedPlan.idee,
+          platzierung: selectedPlan.platzierung,
+          voe: selectedPlan.voe,
+          zusatzinfo: selectedPlan.zusatzinfo,
+          locationId: selectedPlan.location?.id,
+          status: "IN_BEARBEITUNG",
+        }),
       });
 
-      await Promise.all(promises);
-      
-      toast.success(`${selectedPlans.length} ${selectedPlans.length === 1 ? 'Eintrag' : 'Einträge'} erfolgreich übertragen und abgeschlossen!`);
-      onSuccess();
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Fehler beim Übertragen");
+      }
+
+      // Status im InputPlan auf "COMPLETED" setzen
+      await fetch(`/api/inputplan/${selectedPlan.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "COMPLETED" }),
+      });
+
+      alert("Plan erfolgreich in Redak-Plan übertragen!");
+      await onSuccess();
       onClose();
+      setSelectedPlan(null);
     } catch (error) {
-      console.error("Transfer error:", error);
-      toast.error(error instanceof Error ? error.message : "Fehler bei der Übertragung");
+      alert(error instanceof Error ? error.message : "Fehler beim Übertragen");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "Nicht gesetzt";
-    try {
-      return format(new Date(dateString), "dd.MM.yyyy", { locale: de });
-    } catch {
-      return "Ungültiges Datum";
-    }
-  };
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4">In Redaktionsplan übertragen</h2>
-        
-        {selectedPlans.length === 1 ? (
-          // Einzelner Plan - Detailansicht
-          <div className="bg-gray-50 rounded-lg p-4 mb-4">
-            <h3 className="font-semibold mb-3">Ausgewählter Input-Plan:</h3>
-            
-            {/* Status Badge */}
-            <div className="mb-4">
-              <span className="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800 font-medium">
-                ✓ {currentPlan.status === 'APPROVED' ? 'Freigegeben' : currentPlan.status}
-              </span>
-            </div>
-
-            {/* Basis-Informationen in Spalten */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm text-gray-500">Monat</span>
-                  <p className="font-medium">{currentPlan.monat}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">Standort</span>
-                  <p className="font-medium">{currentPlan.location?.name || "Nicht zugeordnet"}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">Bezug</span>
-                  <p className="font-medium">{currentPlan.bezug}</p>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm text-gray-500">Mechanik/Thema</span>
-                  <p className="font-medium">{currentPlan.mechanikThema}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">Platzierung</span>
-                  <p className="font-medium">{currentPlan.platzierung}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">VÖ-Datum</span>
-                  <p className="font-medium">{formatDate(currentPlan.voe || currentPlan.voeDate)}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Hauptidee */}
-            <div className="border-t pt-4 mb-4">
-              <span className="text-sm text-gray-500">Idee</span>
-              <p className="font-medium mt-1">{currentPlan.idee}</p>
-            </div>
-
-            {/* Umsetzungsdetails */}
-            {(currentPlan.implementationLevel || currentPlan.creativeFormat || currentPlan.action) && (
-              <div className="border-t pt-4 mb-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">Umsetzungsdetails</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {currentPlan.implementationLevel && (
-                    <div className="bg-white rounded-md p-3 border border-gray-200">
-                      <span className="text-xs text-gray-500">Umsetzungslevel</span>
-                      <p className="font-medium text-sm mt-1">{currentPlan.implementationLevel}</p>
-                    </div>
-                  )}
-                  {currentPlan.creativeFormat && (
-                    <div className="bg-white rounded-md p-3 border border-gray-200">
-                      <span className="text-xs text-gray-500">Kreativformat</span>
-                      <p className="font-medium text-sm mt-1">{currentPlan.creativeFormat}</p>
-                    </div>
-                  )}
-                  {currentPlan.action && (
-                    <div className="bg-white rounded-md p-3 border border-gray-200">
-                      <span className="text-xs text-gray-500">Aktion</span>
-                      <p className="font-medium text-sm mt-1">{currentPlan.action}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Zusatzinfo */}
-            {currentPlan.zusatzinfo && (
-              <div className="border-t pt-4">
-                <details className="bg-amber-50 rounded-md border border-amber-200">
-                  <summary className="px-4 py-2 cursor-pointer hover:bg-amber-100 font-medium text-sm text-amber-800">
-                    📝 Zusatzinformationen
-                  </summary>
-                  <div className="px-4 pb-3 pt-1 text-sm text-gray-700">
-                    {currentPlan.zusatzinfo}
-                  </div>
-                </details>
-              </div>
-            )}
-          </div>
-        ) : (
-          // Mehrere Pläne - Listenansicht
-          <div className="mb-4">
-            <p className="text-sm text-gray-500 mb-3">
-              {selectedPlans.length} Input-Plan(e) werden in den Redaktionsplan übertragen und als abgeschlossen markiert.
+        <h2 className="text-2xl font-bold mb-4">Input-Plan in Redak-Plan übertragen</h2>
+        {!selectedPlan ? (
+          <>
+            <p className="text-gray-600 mb-4">
+              Wähle einen Input-Plan aus, der in den Redak-Plan übertragen werden soll:
             </p>
-            
-            <div className="bg-gray-50 p-3 rounded-md max-h-48 overflow-y-auto">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                Ausgewählte Einträge:
-              </h4>
-              <ul className="text-sm space-y-2">
-                {selectedPlans.map(plan => (
-                  <li key={plan.id} className="flex justify-between items-center p-2 bg-white rounded border">
-                    <span className="text-gray-700 font-medium">{plan.bezug}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-500">{plan.monat}</span>
-                      {(!plan.voe && !plan.voeDate) && (
-                        <span className="text-red-500 text-xs">⚠️ VÖ fehlt</span>
-                      )}
+            {inputPlans.length === 0 ? (
+              <p className="text-gray-500 italic">Keine Input-Pläne verfügbar.</p>
+            ) : (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {inputPlans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    onClick={() => setSelectedPlan(plan)}
+                    className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{plan.idee}</h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Monat:</span> {plan.monat} | 
+                          <span className="font-medium ml-2">Standort:</span> {plan.location?.name} |
+                          <span className="font-medium ml-2">Bezug:</span> {plan.bezug}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Mechanik/Thema:</span> {plan.mechanikThema}
+                        </p>
+                      </div>
+                      <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-800">
+                        {plan.status}
+                      </span>
                     </div>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <h3 className="font-semibold mb-3">Ausgewählter Input-Plan:</h3>
+              <div className="mb-4">
+                <span className="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800 font-medium">
+                  {selectedPlan.status}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm text-gray-500">Monat</span>
+                    <p className="font-medium">{selectedPlan.monat}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Standort</span>
+                    <p className="font-medium">{selectedPlan.location?.name}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Bezug</span>
+                    <p className="font-medium">{selectedPlan.bezug}</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm text-gray-500">Mechanik/Thema</span>
+                    <p className="font-medium">{selectedPlan.mechanikThema}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Platzierung</span>
+                    <p className="font-medium">{selectedPlan.platzierung}</p>
+                  </div>
+                  {selectedPlan.mehrwert && (
+                    <div>
+                      <span className="text-sm text-gray-500">Mehrwert</span>
+                      <p className="font-medium">{selectedPlan.mehrwert}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="border-t pt-4 mb-4">
+                <span className="text-sm text-gray-500">Idee</span>
+                <p className="font-medium mt-1">{selectedPlan.idee}</p>
+              </div>
+              {/* Weitere Felder nach Bedarf */}
             </div>
-
-            {/* Redaktionshinweise für mehrere Einträge */}
-            <div className="mt-4">
-              <label
-                htmlFor="redaktionshinweise"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Allgemeine Redaktionshinweise (optional)
-              </label>
-              <textarea
-                id="redaktionshinweise"
-                rows={3}
-                value={redaktionshinweise}
-                onChange={(e) => setRedaktionshinweise(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                placeholder="Hinweise für die Redaktion..."
-              />
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                <strong>Hinweis:</strong> Dieser Input-Plan wird als neuer Redak-Plan mit Status "In Bearbeitung" erstellt.
+              </p>
             </div>
-          </div>
+          </>
         )}
-
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
-          <p className="text-sm text-blue-800">
-            <strong>Hinweis:</strong> Die Input-Pläne werden in den Redaktionsplan übertragen und automatisch als "Abgeschlossen" markiert.
-          </p>
-        </div>
-
-        {/* Buttons */}
         <div className="flex justify-end space-x-3 mt-6">
+          {selectedPlan && (
+            <button
+              onClick={() => setSelectedPlan(null)}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              disabled={loading}
+            >
+              Zurück
+            </button>
+          )}
           <button
-            type="button"
             onClick={onClose}
-            disabled={isLoading}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            disabled={loading}
           >
             Abbrechen
           </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isLoading || selectedPlans.some(p => !p.voe && !p.voeDate)}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? "Übertrage..." : `${selectedPlans.length} ${selectedPlans.length === 1 ? 'Eintrag' : 'Einträge'} übertragen`}
-          </button>
+          {selectedPlan && (
+            <button
+              onClick={handleConvert}
+              disabled={loading}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              {loading ? "Übertrage..." : "In Redak-Plan übertragen"}
+            </button>
+          )}
         </div>
       </div>
     </div>

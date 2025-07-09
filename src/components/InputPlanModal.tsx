@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, SparklesIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 
 interface InputPlan {
@@ -40,6 +40,7 @@ export interface InputPlanModalProps {
   inputPlan: InputPlan | null;
   onSave: (plan: InputPlan) => Promise<void>;
   readOnly?: boolean;
+  locations: { id: string; name: string }[]; // Hinzugefügtes Prop für Standorte
 }
 
 export function InputPlanModal({
@@ -48,7 +49,23 @@ export function InputPlanModal({
   inputPlan,
   onSave,
   readOnly = false,
+  locations, // Destrukturierung des neuen Props
 }: InputPlanModalProps) {
+  const MONATE = [
+    "Januar",
+    "Februar",
+    "März",
+    "April",
+    "Mai",
+    "Juni",
+    "Juli",
+    "August",
+    "September",
+    "Oktober",
+    "November",
+    "Dezember",
+  ];
+
   const [formData, setFormData] = useState<InputPlan>({
     id: "",
     monat: "",
@@ -99,23 +116,36 @@ export function InputPlanModal({
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleGenerateText = async () => {
+    toast.loading("Text wird generiert...");
+    try {
+      // Hier kommt deine AI-Generierungs-Logik
+      // const generatedText = await generateAIText(formData.creativeBriefingExample);
+      // setFormData({ ...formData, copyExample: generatedText });
+      
+      // Placeholder für Demo
+      setTimeout(() => {
+        toast.dismiss();
+        toast.success("Text erfolgreich generiert!");
+      }, 2000);
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Fehler beim Generieren des Textes");
+    }
+  };
+
+  const handleShowHistory = () => {
+    // Hier kommt die Logik für die Historie-Anzeige
+    toast("Historie-Feature kommt bald!");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) {
-      toast.error("Bitte korrigieren Sie die Fehler im Formular");
       return;
     }
-
-    if (!readOnly) {
-      // Nur beim Speichern in ISO-String umwandeln!
-      const planToSave = {
-        ...formData,
-        voe: formData.voe ? new Date(formData.voe + "T00:00:00Z").toISOString() : undefined,
-      };
-      await onSave(planToSave);
-      onClose();
-    }
+    await onSave(formData);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -178,19 +208,12 @@ export function InputPlanModal({
                             required
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           >
-                            <option value="">Bitte wählen...</option>
-                            <option value="Januar">Januar</option>
-                            <option value="Februar">Februar</option>
-                            <option value="März">März</option>
-                            <option value="April">April</option>
-                            <option value="Mai">Mai</option>
-                            <option value="Juni">Juni</option>
-                            <option value="Juli">Juli</option>
-                            <option value="August">August</option>
-                            <option value="September">September</option>
-                            <option value="Oktober">Oktober</option>
-                            <option value="November">November</option>
-                            <option value="Dezember">Dezember</option>
+                            <option value="">Bitte wählen…</option>
+                            {MONATE.map((monat) => (
+                              <option key={monat} value={monat}>
+                                {monat}
+                              </option>
+                            ))}
                           </select>
                         </div>
 
@@ -211,31 +234,24 @@ export function InputPlanModal({
                           />
                           {errors.voe && <p className="mt-1 text-sm text-red-600">{errors.voe}</p>}
                         </div>
-
+                 
+                        {/* Standort Auswahl - neu hinzugefügt */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Bezug *</label>
-                          <input
-                            type="text"
-                            value={formData.bezug}
-                            onChange={(e) => setFormData({ ...formData, bezug: e.target.value })}
+                          <label className="block text-sm font-medium text-gray-700">Standort *</label>
+                          <select
+                            value={formData.locationId}
+                            onChange={(e) => setFormData({ ...formData, locationId: e.target.value })}
                             disabled={readOnly}
                             required
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                          />
+                          >
+                            <option value="">Bitte wählen</option>
+                            {locations.map(loc => (
+                              <option key={loc.id} value={loc.id}>{loc.name}</option>
+                            ))}
+                          </select>
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Mehrwert</label>
-                          <input
-                            type="text"
-                            value={formData.mehrwert || ""}
-                            onChange={(e) => setFormData({ ...formData, mehrwert: e.target.value })}
-                            disabled={readOnly}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                          />
-                        </div>
-
-                        <div>
+						<div>
                           <label className="block text-sm font-medium text-gray-700">Mechanik/Thema *</label>
                           <input
                             type="text"
@@ -248,6 +264,18 @@ export function InputPlanModal({
                         </div>
 
                         <div>
+                          <label className="block text-sm font-medium text-gray-700">Bezug *</label>
+                          <input
+                            type="text"
+                            value={formData.bezug}
+                            onChange={(e) => setFormData({ ...formData, bezug: e.target.value })}
+                            disabled={readOnly}
+                            required
+                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                          />
+                        </div>
+						
+						         <div>
                           <label className="block text-sm font-medium text-gray-700">Platzierung *</label>
                           <input
                             type="text"
@@ -258,7 +286,26 @@ export function InputPlanModal({
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           />
                         </div>
+									          <div>
+                          <label className="block text-sm font-medium text-gray-700">Format</label>
+                          <input
+                            type="text"
+                            value={formData.creativeFormat || ""}
+                            onChange={(e) => setFormData({ ...formData, creativeFormat: e.target.value })}
+                            disabled={readOnly}
+                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                          />
+                        </div>
 
+                        
+
+                  
+                      </div>
+
+                      {/* Content-Informationen */}
+                      <div className="space-y-4">
+                        <h3 className="font-semibold text-lg mb-3">Content-Informationen</h3>
+                        
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Status</label>
                           <select
@@ -279,27 +326,9 @@ export function InputPlanModal({
                             <option value="DRAFT">Entwurf</option>
                             <option value="IN_PROGRESS">In Bearbeitung</option>
                             <option value="REVIEW">Review</option>
-                            <option value="APPROVED">Freigabe</option>
+                            <option value="APPROVED">Freigegeben</option>
                           </select>
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">
-                            <input
-                              type="checkbox"
-                              checked={formData.flag}
-                              onChange={(e) => setFormData({ ...formData, flag: e.target.checked })}
-                              disabled={readOnly}
-                              className="mr-2"
-                            />
-                            Flag (Markierung)
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Content-Informationen */}
-                      <div className="space-y-4">
-                        <h3 className="font-semibold text-lg mb-3">Content-Informationen</h3>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Idee *</label>
@@ -309,6 +338,19 @@ export function InputPlanModal({
                             disabled={readOnly}
                             required
                             rows={3}
+                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                          />
+                        </div>
+						
+			
+						
+						 <div>
+                          <label className="block text-sm font-medium text-gray-700">Action</label>
+                          <input
+                            type="text"
+                            value={formData.action || ""}
+                            onChange={(e) => setFormData({ ...formData, action: e.target.value })}
+                            disabled={readOnly}
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           />
                         </div>
@@ -323,27 +365,29 @@ export function InputPlanModal({
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           />
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Format</label>
+						
+						<div>
+                          <label className="block text-sm font-medium text-gray-700">Mehrwert</label>
                           <input
                             type="text"
-                            value={formData.creativeFormat || ""}
-                            onChange={(e) => setFormData({ ...formData, creativeFormat: e.target.value })}
+                            value={formData.mehrwert || ""}
+                            onChange={(e) => setFormData({ ...formData, mehrwert: e.target.value })}
                             disabled={readOnly}
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Action</label>
-                          <input
-                            type="text"
-                            value={formData.action || ""}
-                            onChange={(e) => setFormData({ ...formData, action: e.target.value })}
-                            disabled={readOnly}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                          />
+                          <label className="block text-sm font-medium text-gray-700">
+                            <input
+                              type="checkbox"
+                              checked={formData.flag}
+                              onChange={(e) => setFormData({ ...formData, flag: e.target.checked })}
+                              disabled={readOnly}
+                              className="mr-2"
+                            />
+                            Flag (Markierung)
+                          </label>
                         </div>
                       </div>
 
@@ -362,15 +406,54 @@ export function InputPlanModal({
                           />
                         </div>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Copy-Beispiel</label>
-                          <textarea
-                            value={formData.copyExample || ""}
-                            onChange={(e) => setFormData({ ...formData, copyExample: e.target.value })}
-                            disabled={readOnly}
-                            rows={3}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                          />
+                        {/* AI Generation Button */}
+                        {!readOnly && (
+                          <div className="flex items-center justify-between -mt-2 mb-4">
+                            <button
+                              type="button"
+                              onClick={handleGenerateText}
+                              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                            >
+                              <SparklesIcon className="h-5 w-5" />
+                              <span className="font-medium">Text generieren</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleShowHistory}
+                              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                              title="Generierungsverlauf anzeigen"
+                            >
+                              <ClockIcon className="h-5 w-5" />
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Copy-Beispiel mit visueller Verbindung */}
+                        <div className={`${!readOnly ? 'bg-gray-50 p-4 rounded-lg border border-gray-200' : ''}`}>
+                          <div className="flex items-start gap-2">
+                            {!readOnly && (
+                              <div className="mt-1">
+                                <div className="w-0.5 h-8 bg-gradient-to-b from-purple-400 to-transparent mx-auto"></div>
+                                <SparklesIcon className="h-4 w-4 text-purple-600" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <label className="block text-sm font-medium text-gray-700">
+                                Copy-Beispiel
+                                {!readOnly && <span className="text-xs text-gray-500 ml-2">(Wird durch AI generiert)</span>}
+                              </label>
+                              <textarea
+                                value={formData.copyExample || ""}
+                                onChange={(e) => setFormData({ ...formData, copyExample: e.target.value })}
+                                disabled={readOnly}
+                                rows={3}
+                                className={`mt-1 w-full p-2 border rounded ${
+                                  readOnly ? "bg-gray-100 cursor-not-allowed" : "bg-white"
+                                }`}
+                                placeholder={!readOnly ? "Klicke auf 'Text generieren' um automatisch einen Copy-Text zu erstellen..." : ""}
+                              />
+                            </div>
+                          </div>
                         </div>
 
                         <div>
@@ -482,4 +565,3 @@ export function InputPlanModal({
     </Transition>
   );
 }
-

@@ -6,23 +6,19 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const history = await prisma.inputPlanHistory.findMany({
-      where: { inputPlanId: params.id },
+    const history = await prisma.redakPlanHistory.findMany({
+      where: { redakPlanId: params.id },
       orderBy: { changedAt: "desc" },
       include: {
         changedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
+          select: { id: true, name: true, email: true },
         },
       },
     });
     return NextResponse.json(history);
   } catch (error) {
     return NextResponse.json(
-      { error: "Fehler beim Laden der History" },
+      { error: "Fehler beim Laden der Historie" },
       { status: 500 }
     );
   }

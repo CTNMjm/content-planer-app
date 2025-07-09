@@ -28,15 +28,15 @@ interface InputPlan {
   flag: boolean;
   voe?: string;
   voeDate?: string;
-  status: "DRAFT" | "IN_PROGRESS" | "REVIEW" | "APPROVED" | "COMPLETED";
+  status: "DRAFT" | "IN_PROGRESS" | "REVIEW" | "APPROVED" | "COMPLETED" | "ABGESCHLOSSEN";
   location: {
     id: string;
     name: string;
   };
   createdAt: string;
   updatedAt: string;
-  anlass?: string | null;
-  geschaeft?: string | null;
+  anlass?: string;
+  geschaeft?: string; // <--- HINZUGEFÜGT
 }
 
 export default function AbgeschlossenInputPlans() {
@@ -131,7 +131,7 @@ export default function AbgeschlossenInputPlans() {
       
       // DEBUG: Zeige alle Status-Werte
       console.log("Alle InputPläne:", data);
-      console.log("Vorhandene Status:", [...new Set(data.map((p: InputPlan) => p.status))]);
+      console.log("Vorhandene Status:", Array.from(new Set(data.map((p: InputPlan) => p.status))));
       
       // Nur abgeschlossene Pläne anzeigen - prüfe beide möglichen Werte
       const completedPlans = data.filter((plan: InputPlan) =>
@@ -256,6 +256,7 @@ export default function AbgeschlossenInputPlans() {
         </div>
       </div>
     );
+
   };
 
   if (loading) {
@@ -364,61 +365,38 @@ export default function AbgeschlossenInputPlans() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    VOE Datum
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Idee
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Mechanik/Thema
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Anlass
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Standort
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Abgeschlossen am
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Aktionen
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monat</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bezug</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mechanik/Thema</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Standort</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Abgeschlossen am</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentPlans.map((plan) => (
-                  <tr 
-                    key={plan.id} 
+                  <tr
+                    key={plan.id}
                     className="hover:bg-gray-50 cursor-pointer"
                     onClick={() => {
                       setSelectedPlan(plan);
                       setIsModalOpen(true);
                     }}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {plan.voe ? new Date(plan.voe).toLocaleDateString('de-DE') : '-'}
-                    </td>
-                    <td className="px-6 py-4">{plan.idee}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{plan.monat}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{plan.bezug}</td>
                     <td className="px-6 py-4">{plan.mechanikThema}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{plan.anlass || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{plan.location.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(plan.updatedAt).toLocaleDateString('de-DE')}
                     </td>
-                    <td 
-                      className="px-6 py-4 whitespace-nowrap text-sm"
-                      onClick={(e) => e.stopPropagation()} // Verhindert das Öffnen des Modals bei Button-Klick
-                    >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => handleReactivate(plan.id)}
                         className="mr-3 text-green-600 hover:text-green-900"
                         title="Plan reaktivieren"
                       >
-                        <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
+                        {/* Icon wie bei ContentPlan */}
                         Reaktivieren
                       </button>
                       <button
@@ -426,9 +404,7 @@ export default function AbgeschlossenInputPlans() {
                         className="text-red-600 hover:text-red-900"
                         title="Endgültig löschen"
                       >
-                        <svg className="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        {/* Icon wie bei ContentPlan */}
                         Löschen
                       </button>
                     </td>

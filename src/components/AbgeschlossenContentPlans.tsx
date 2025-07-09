@@ -410,7 +410,10 @@ export default function AbgeschlossenContentPlans() {
             setIsModalOpen(false);
             setSelectedPlan(null);
           }}
-          contentPlan={selectedPlan}
+          contentPlan={{
+            ...selectedPlan,
+            mehrwert: selectedPlan.mehrwert ?? undefined,
+          }}
           onSave={async () => {
             alert("Abgeschlossene Pläne können nicht bearbeitet werden. Nutzen Sie 'Reaktivieren' um den Plan wieder zu bearbeiten.");
           }}

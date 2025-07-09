@@ -28,7 +28,7 @@ interface ContentPlan {
   id: string;
   monat: string;
   bezug: string;
-  mehrwert?: string | null | undefined;
+  mehrwert?: string | null;
   mechanikThema: string;
   platzierung: string;
   idee: string;
@@ -54,11 +54,10 @@ interface Location {
 
 interface ContentPlanModalProps {
   isOpen: boolean;
-  contentPlan: ContentPlan | null;
   onClose: () => void;
-  onSave: (data: ContentPlanFormData) => void;
-  selectedLocation?: string;
-  readOnly?: boolean; // <--- Diese Zeile ergänzen!
+  contentPlan: ContentPlan | null; // <--- Das muss vorhanden sein!
+  onSave: (data: any) => Promise<void>;
+  locations: Array<{ id: string; name: string }>;
 }
 
 interface ConvertToInputModalProps {
@@ -70,10 +69,10 @@ interface ConvertToInputModalProps {
 
 export function ContentPlanModal({
   isOpen,
-  contentPlan,
   onClose,
+  contentPlan,
   onSave,
-  selectedLocation,
+  locations,
 }: ContentPlanModalProps) {
   const { data: session } = useSession();
   const [permissions, setPermissions] = useState<string[]>([]);
@@ -96,9 +95,10 @@ export function ContentPlanModal({
     notes: "",
     action: "",
   });
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [locationsState, setLocationsState] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
   const [locationsLoading, setLocationsLoading] = useState(true);
+  const [newLocation, setNewLocation] = useState({ name: "", status: "ACTIVE" });
 
   // Lade Berechtigungen
   useEffect(() => {
@@ -113,8 +113,10 @@ export function ContentPlanModal({
   }, []);
 
   useEffect(() => {
-    if (contentPlan && locations.length > 0) {
+    if (contentPlan && locationsState.length > 0) {
       setFormData({
+        ...formData,
+        locationId: contentPlan.location?.id || locationsState[0]?.id || "",
         monat: contentPlan.monat || "",
         bezug: contentPlan.bezug || "",
         mehrwert: contentPlan.mehrwert || "",
@@ -122,7 +124,6 @@ export function ContentPlanModal({
         platzierung: contentPlan.platzierung || "",
         idee: contentPlan.idee || "",
         status: contentPlan.status || "DRAFT",
-        locationId: contentPlan.location?.id || locations[0]?.id || "",
         // Neue Felder - immer mit || "" absichern
         implementationLevel: contentPlan.implementationLevel || "",
         creativeFormat: contentPlan.creativeFormat || "",
@@ -133,13 +134,14 @@ export function ContentPlanModal({
         notes: contentPlan.notes || "",
         action: contentPlan.action || "",
       });
-    } else if (!contentPlan && locations.length > 0) {
+    } else if (!contentPlan && locationsState.length > 0) {
       setFormData(prev => ({
         ...prev,
-        locationId: locations[0].id || "",
+        locationId: locationsState[0].id || "",
       }));
     }
-  }, [contentPlan, locations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentPlan, locationsState]);
 
   // Nach Zeile 130 (nach dem contentPlan useEffect):
   useEffect(() => {
@@ -178,7 +180,7 @@ export function ContentPlanModal({
       console.log('Loaded locations:', data); // DEBUG
       
       if (Array.isArray(data)) {
-        setLocations(data);
+        setLocationsState(data);
         
         if (!contentPlan && data.length > 0) {
           setFormData(prev => ({ ...prev, locationId: data[0].id }));
@@ -186,7 +188,7 @@ export function ContentPlanModal({
       }
     } catch (error) {
       console.error("Error fetching locations:", error);
-      setLocations([]);
+      setLocationsState([]);
     } finally {
       setLocationsLoading(false);
     }
@@ -195,15 +197,19 @@ export function ContentPlanModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
-      // Validierung
       if (!formData.monat || !formData.bezug || !formData.mechanikThema || !formData.idee || !formData.platzierung || !formData.locationId) {
         alert('Bitte füllen Sie alle Pflichtfelder aus');
         return;
       }
 
-      await onSave(formData);
+      // HIER: createdById beim Anlegen mitgeben!
+      const planToSave = contentPlan
+        ? { ...contentPlan, ...formData }
+        : { ...formData, createdById: session?.user?.id };
+
+      await onSave(planToSave);
       onClose();
     } catch (error) {
       console.error('Fehler beim Speichern:', error);
@@ -223,7 +229,7 @@ export function ContentPlanModal({
     // Spezielle Behandlung für locationId
     if (name === 'locationId') {
       console.log('Location changed to:', value);
-      console.log('Available locations:', locations);
+      console.log('Available locations:', locationsState);
     }
   };
 
@@ -394,7 +400,7 @@ export function ContentPlanModal({
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium mb-2">
                           Standort *
                         </label>
                         <select
@@ -402,13 +408,13 @@ export function ContentPlanModal({
                           value={formData.locationId || ''}
                           onChange={handleChange}
                           required
-                          disabled={locationsLoading || locations.length === 0}
+                          disabled={locationsState.length === 0}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
                         >
                           <option value="">
-                            {locationsLoading ? "Lade..." : "Bitte wählen"}
+                            {locationsState.length === 0 ? "Keine Standorte verfügbar" : "Bitte wählen"}
                           </option>
-                          {locations.map(location => (
+                          {locationsState.map(location => (
                             <option key={location.id} value={location.id}>
                               {location.name}
                             </option>
@@ -418,7 +424,7 @@ export function ContentPlanModal({
                         {/* Debug Info */}
                         <div className="text-xs text-gray-500 mt-1">
                           Aktuelle ID: {formData.locationId || 'keine'} | 
-                          Verfügbar: {locations.length} Standorte
+                          Verfügbar: {locationsState.length} Standorte
                         </div>
                       </div>
                     </div>
@@ -581,7 +587,7 @@ export function ContentPlanModal({
                     </button>
                     <button
                       type="submit"
-                      disabled={loading || locationsLoading || locations.length === 0}
+                      disabled={loading || locationsLoading || locationsState.length === 0}
                       className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? "Speichern..." : "Speichern"}

@@ -47,6 +47,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     },
   });
 
+  console.log('Neuer InputPlan:', inputPlan);
+
   // NEU: Historie-Eintrag für die Erstellung
   await prisma.inputPlanHistory.create({
     data: {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RedakPlanModal } from "@/components/RedakPlanModal";
+import RedakPlanHistory from "@/components/RedakPlanHistory";
 
 interface RedakPlan {
   id: string;
@@ -13,7 +14,7 @@ interface RedakPlan {
   idee: string;
   platzierung: string;
   voe: string;
-  status: "DRAFT" | "IN_PROGRESS" | "REVIEW" | "APPROVED" | "COMPLETED";  // string ersetzen!
+  status: "COMPLETED" | "DRAFT" | "IN_PROGRESS" | "REVIEW" | "APPROVED";
   publiziert: boolean;
   locationId: string;
   location: {
@@ -45,7 +46,12 @@ export default function RedakPlanList() {
   const [sortField, setSortField] = useState<SortField>('voe');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [showCompleted, setShowCompleted] = useState(false); // NEU: State für abgeschlossene Ansicht
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const router = useRouter();
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyPlanId, setHistoryPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRedakPlans();
@@ -119,6 +125,11 @@ export default function RedakPlanList() {
       setSortField(field);
       setSortOrder('asc');
     }
+  };
+
+  const handleShowHistory = (planId: string) => {
+    setHistoryPlanId(planId);
+    setShowHistory(true);
   };
 
   // Filter und Sortierung anwenden
@@ -195,6 +206,10 @@ export default function RedakPlanList() {
       }
     });
 
+  const totalPages = Math.ceil(filteredAndSortedPlans.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedPlans = filteredAndSortedPlans.slice(startIndex, startIndex + itemsPerPage);
+
   const getStatusDisplay = (status: string) => {
     const statusMap: { [key: string]: { text: string; class: string } } = {
       'DRAFT': { text: 'Entwurf', class: 'bg-gray-100 text-gray-800' },
@@ -245,12 +260,36 @@ export default function RedakPlanList() {
     );
   }
 
+  const Pager = (): JSX.Element | null => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="mt-4 flex justify-center">
+        <nav className="flex space-x-2">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded ${
+                currentPage === i + 1
+                  ? "bg-orange-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </nav>
+      </div>
+    );
+  };
+
   return (
     <div>
       {/* Header */}
       <div className="mb-6">
         <div className="flex justify-end items-center mb-4">
           <div className="flex gap-2">
+            {/* Abgeschlossen-Button */}
             <button
               onClick={() => setShowCompleted(!showCompleted)}
               className={`px-4 py-2 rounded-md ${
@@ -261,18 +300,39 @@ export default function RedakPlanList() {
             >
               {showCompleted ? "← Zurück" : "Abgeschlossen"}
             </button>
-            
+            {/* + Neuer Redakplan nur wenn nicht abgeschlossen */}
             {!showCompleted && (
               <button
                 onClick={() => {
                   setSelectedRedakPlan(null);
                   setIsModalOpen(true);
                 }}
-                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
               >
-                + Neuer RedakPlan
+                + Neuer Redakplan
               </button>
             )}
+            {/* Ansicht-Umschalter */}
+            <button
+              onClick={() => setViewMode("list")}
+              className={`px-4 py-2 rounded-md ${
+                viewMode === "list"
+                  ? "bg-orange-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              Liste
+            </button>
+            <button
+              onClick={() => setViewMode("kanban")}
+              className={`px-4 py-2 rounded-md ${
+                viewMode === "kanban"
+                  ? "bg-orange-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              Kanban
+            </button>
           </div>
         </div>
 
@@ -361,139 +421,7 @@ export default function RedakPlanList() {
 
       {/* Tabelle */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('voe')}
-              >
-                <div className="flex items-center">
-                  VOE Datum
-                  {sortField === 'voe' && (
-                    <svg className={`ml-1 w-4 h-4 ${sortOrder === 'desc' ? 'transform rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-              </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('monat')}
-              >
-                <div className="flex items-center">
-                  Monat
-                  {sortField === 'monat' && (
-                    <svg className={`ml-1 w-4 h-4 ${sortOrder === 'desc' ? 'transform rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Idee
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Bezug
-              </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('status')}
-              >
-                <div className="flex items-center">
-                  Status
-                  {sortField === 'status' && (
-                    <svg className={`ml-1 w-4 h-4 ${sortOrder === 'desc' ? 'transform rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-              </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('location')}
-              >
-                <div className="flex items-center">
-                  Standort
-                  {sortField === 'location' && (
-                    <svg className={`ml-1 w-4 h-4 ${sortOrder === 'desc' ? 'transform rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Veröffentlicht
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Aktionen
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAndSortedPlans.map((plan) => {
-              const statusInfo = getStatusDisplay(plan.status);
-              return (
-                <tr 
-                  key={plan.id} 
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => {
-                    setSelectedRedakPlan(plan);
-                    setIsModalOpen(true);
-                  }}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(plan.voe).toLocaleDateString('de-DE')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {plan.monat}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    <div className="max-w-xs truncate" title={plan.idee}>
-                      {plan.idee}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {plan.bezug}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.class}`}>
-                      {statusInfo.text}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {plan.location.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {plan.publiziert ? (
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        Ja
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                        Nein
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedRedakPlan(plan);
-                        setIsModalOpen(true);
-                      }}
-                      className="text-orange-600 hover:text-orange-900"
-                    >
-                      Bearbeiten
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-        {filteredAndSortedPlans.length === 0 && (
+        {filteredAndSortedPlans.length === 0 ? (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -507,6 +435,193 @@ export default function RedakPlanList() {
                 : showCompleted ? 'Es gibt noch keine abgeschlossenen Redaktionspläne.' : 'Erstellen Sie Ihren ersten Redaktionsplan.'}
             </p>
           </div>
+        ) : viewMode === "list" ? (
+          <>
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('voe')}
+                  >
+                    <div className="flex items-center">
+                      VOE Datum
+                      {sortField === 'voe' && (
+                        <svg className={`ml-1 w-4 h-4 ${sortOrder === 'desc' ? 'transform rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('monat')}
+                  >
+                    <div className="flex items-center">
+                      Monat
+                      {sortField === 'monat' && (
+                        <svg className={`ml-1 w-4 h-4 ${sortOrder === 'desc' ? 'transform rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Idee
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Bezug
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center">
+                      Status
+                      {sortField === 'status' && (
+                        <svg className={`ml-1 w-4 h-4 ${sortOrder === 'desc' ? 'transform rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('location')}
+                  >
+                    <div className="flex items-center">
+                      Standort
+                      {sortField === 'location' && (
+                        <svg className={`ml-1 w-4 h-4 ${sortOrder === 'desc' ? 'transform rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Veröffentlicht
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Aktionen
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {paginatedPlans.map((plan) => {
+                  const statusInfo = getStatusDisplay(plan.status);
+                  return (
+                    <tr 
+                      key={plan.id} 
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => {
+                        setSelectedRedakPlan(plan);
+                        setIsModalOpen(true);
+                      }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(plan.voe).toLocaleDateString('de-DE')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {plan.monat}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="max-w-xs truncate" title={plan.idee}>
+                          {plan.idee}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {plan.bezug}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.class}`}>
+                          {statusInfo.text}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {plan.location.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {plan.publiziert ? (
+                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Ja
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                            Nein
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedRedakPlan(plan);
+                            setIsModalOpen(true);
+                          }}
+                          className="text-orange-600 hover:text-orange-900"
+                        >
+                          Bearbeiten
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // <-- Das ist wichtig!
+                            setSelectedRedakPlan(plan);
+                            handleShowHistory(plan.id);
+                          }}
+                          className="text-gray-600 hover:text-gray-900 text-sm font-medium"
+                        >
+                          Historie
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            <Pager />
+          </>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {["DRAFT", "IN_PROGRESS", "REVIEW", "APPROVED", "COMPLETED"].map((status) => (
+                <div key={status} className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-700 mb-3">
+                    {getStatusDisplay(status).text}
+                  </h3>
+                  <div className="space-y-2">
+                    {paginatedPlans.filter(plan => plan.status === status).map(plan => (
+                      <div
+                        key={plan.id}
+                        className="bg-white p-3 rounded shadow hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => {
+                          setSelectedRedakPlan(plan);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <div className="font-medium text-sm">{plan.monat}</div>
+                        <div className="text-xs text-gray-600">{plan.bezug}</div>
+                        <div className="text-xs text-gray-500">{plan.mechanikThema}</div>
+                        <div className="text-xs text-gray-400">{plan.location.name}</div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          VOE: {new Date(plan.voe).toLocaleDateString('de-DE')}
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          <span className={`px-2 py-1 text-xs rounded ${getStatusDisplay(plan.status).class}`}>
+                            {getStatusDisplay(plan.status).text}
+                          </span>
+                          {plan.publiziert && (
+                            <span className="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Veröffentlicht</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Pager />
+          </>
         )}
       </div>
 
@@ -521,6 +636,18 @@ export default function RedakPlanList() {
         onSave={handleSaveRedakPlan}
         locations={locations}
       />
+
+      {/* RedakPlan History */}
+      {selectedRedakPlan && showHistory && (
+        <RedakPlanHistory
+          redakPlanId={historyPlanId || ""}
+          isOpen={showHistory}
+          onClose={() => {
+            setShowHistory(false);
+            setHistoryPlanId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

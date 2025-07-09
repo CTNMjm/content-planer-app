@@ -31,6 +31,7 @@ interface ContentPlan {
     id: string;
     name: string;
   };
+  locationId: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -66,9 +67,11 @@ export default function ContentPlanList() {
   // Export/Import Dialog States
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [locations, setLocations] = useState([]);
 
   useEffect(() => {
     fetchContentPlans();
+    fetchLocations();
   }, []);
 
   useEffect(() => {
@@ -152,6 +155,19 @@ export default function ContentPlanList() {
       setError(err instanceof Error ? err.message : "Ein Fehler ist aufgetreten"); 
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLocations = async () => {
+    try {
+      const response = await fetch("/api/locations");
+      if (!response.ok) {
+        throw new Error("Fehler beim Laden der Standorte");
+      }
+      const data = await response.json();
+      setLocations(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ein Fehler ist aufgetreten"); 
     }
   };
 
@@ -486,21 +502,17 @@ export default function ContentPlanList() {
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded-md ${viewMode === "list" ? "bg-gray-200 text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+              className={`px-4 py-2 rounded-md border ${viewMode === "list" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700"}`}
               title="Listenansicht"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-              </svg>
+              Listenansicht
             </button>
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-md ${viewMode === "grid" ? "bg-gray-200 text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
-              title="Kachelansicht"
+              className={`px-4 py-2 rounded-md border ${viewMode === "grid" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700"}`}
+              title="Kanbanansicht"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-              </svg>
+              Kanbanansicht
             </button>
           </div>
         </div>
@@ -771,8 +783,9 @@ export default function ContentPlanList() {
             setShowModal(false);
             setEditingPlan(null);
           }}
-          onSave={handleSave}
           contentPlan={editingPlan}
+          onSave={handleSave}
+          locations={locations} // <-- hier!
         />
       )}
 

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/authOptions";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma"; // ggf. anpassen
 
 export async function POST(req: NextRequest) {
   // HIER: Debug-Logging hinzufügen
@@ -75,6 +73,21 @@ export async function POST(req: NextRequest) {
         error: "Fehler beim Erstellen des Input-Plans",
         details: error instanceof Error ? error.message : "Unbekannter Fehler"
       },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET() {
+  try {
+    const inputPlans = await prisma.inputPlan.findMany({
+      include: { location: true },
+      orderBy: { updatedAt: "desc" },
+    });
+    return NextResponse.json(inputPlans);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Fehler beim Laden der Input-Pläne" },
       { status: 500 }
     );
   }

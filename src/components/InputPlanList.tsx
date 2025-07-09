@@ -8,8 +8,9 @@ import { ClockIcon } from "@heroicons/react/24/outline";
 import { InputPlanModal } from "@/components/InputPlanModal";
 // Korrekter Import - default export
 import InputPlanHistory from "@/components/InputPlanHistory";
-import ConvertToRedakModal from "@/components/ConvertToRedakModal"; // Import hinzufügen
+import ConvertToRedakModal from "@/components/ConvertToRedakModal";
 import { toast } from "react-hot-toast";
+
 
 interface InputPlan {
   id: string;
@@ -107,9 +108,10 @@ export default function InputPlanList({
 
   const fetchInputPlans = async () => {
     try {
-      const response = await fetch("/api/inputplan"); // Geändert von "/api/input-plans" zu "/api/inputplan"
+      const response = await fetch("/api/inputplan");
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
+      console.log("Geladene InputPlans:", data); // <-- HIER!
       setInputPlans(data);
     } catch (error) {
       console.error("Error fetching input plans:", error);
@@ -145,17 +147,15 @@ export default function InputPlanList({
   };
 
   // Modal Close Handler
-  const handleModalClose = (updated: boolean) => {
+  const handleModalClose = () => {
     setShowModal(false);
     setEditingPlan(null);
-    if (updated) {
-      fetchInputPlans(); // Daten neu laden
-    }
+    fetchInputPlans();
   };
 
   // Transfer Handler für Redaktionsplan
   const handleTransferToRedakPlan = async (inputPlan: InputPlan) => {
-    if (!inputPlan.voe && !inputPlan.voeDate) {
+    if (!inputPlan.voe) {
       toast.error("Bitte setzen Sie zuerst ein Veröffentlichungsdatum (VÖ) für diesen Eintrag.");
       return;
     }
@@ -163,26 +163,44 @@ export default function InputPlanList({
       return;
     }
     try {
-      const response = await fetch(`/api/inputplan/${inputPlan.id}/copy-to-redak`, {
+      const response = await fetch("/api/redakplan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inputPlanId: inputPlan.id,
+          monat: inputPlan.monat,
+          bezug: inputPlan.bezug,
+          mechanikThema: inputPlan.mechanikThema,
+          idee: inputPlan.idee ?? "",
+          voe: inputPlan.voe,
+          platzierung: inputPlan.platzierung,
+          locationId: inputPlan.locationId,
+          status: "DRAFT",
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        
-        // Spezielle Behandlung für "bereits kopiert"
-        if (response.status === 409) {
-          toast.error("Dieser Eintrag wurde bereits in den Redaktionsplan übertragen.");
-          fetchInputPlans(); // Liste neu laden um Status zu aktualisieren
-          return;
-        }
-        
         throw new Error(error.error || "Transfer fehlgeschlagen");
       }
 
+      // Status auf COMPLETED setzen (mit allowCompleted-Flag)
+      const updateResponse = await fetch(`/api/inputplan/${inputPlan.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "COMPLETED",
+          allowCompleted: true, // <-- wichtig!
+        }),
+      });
+
+      if (!updateResponse.ok) {
+        const error = await updateResponse.json();
+        throw new Error(error.error || "Status konnte nicht aktualisiert werden");
+      }
+
       toast.success("Erfolgreich zu RedakPlan übertragen und abgeschlossen!");
-      fetchInputPlans(); // Liste neu laden
+      fetchInputPlans && fetchInputPlans();
     } catch (error) {
       console.error("Transfer error:", error);
       toast.error(error instanceof Error ? error.message : "Fehler beim Übertragen zu RedakPlan");
@@ -198,49 +216,45 @@ export default function InputPlanList({
 
   // Filter und Sortierung - COMPLETED ausschließen wenn nicht in der Abgeschlossen-Ansicht
   const filteredAndSortedPlans = inputPlans
-    .filter((plan) => {
-      // Filter für abgeschlossene/nicht abgeschlossene
-      if (showCompleted) {
-        return plan.status === "COMPLETED";
-      } else {
-        return plan.status !== "COMPLETED";
-      }
-    })
-    .filter((plan) => {
-      // Suchfilter
-      if (!searchTerm) return true;
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        plan.monat.toLowerCase().includes(searchLower) ||
-        plan.bezug.toLowerCase().includes(searchLower) ||
-        plan.mechanikThema.toLowerCase().includes(searchLower) ||
-        plan.idee.toLowerCase().includes(searchLower) ||
-        plan.platzierung.toLowerCase().includes(searchLower) ||
-        plan.location.name.toLowerCase().includes(searchLower)
-      );
-    })
-    .sort((a, b) => {
-      let compareValue = 0;
-      
-      switch (sortBy) {
-        case "monat":
-          compareValue = a.monat.localeCompare(b.monat);
-          break;
-        case "status":
-          compareValue = a.status.localeCompare(b.status);
-          break;
-        case "location":
-          compareValue = a.location.name.localeCompare(b.location.name);
-          break;
-        case "updatedAt":
-          compareValue = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
-          break;
-        default:
-          compareValue = a.monat.localeCompare(b.monat);
-      }
-
-      return sortOrder === "asc" ? compareValue : -compareValue;
-    });
+  .filter((plan) => {
+    if (showCompleted) {
+      return plan.status === "COMPLETED";
+    } else {
+      return plan.status !== "COMPLETED";
+    }
+  })
+  .filter((plan) => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      plan.monat.toLowerCase().includes(searchLower) ||
+      plan.bezug.toLowerCase().includes(searchLower) ||
+      plan.mechanikThema.toLowerCase().includes(searchLower) ||
+      (plan.idee && plan.idee.toLowerCase().includes(searchLower)) ||
+      plan.platzierung.toLowerCase().includes(searchLower) ||
+      (plan.location?.name && plan.location.name.toLowerCase().includes(searchLower))
+    );
+  })
+  .sort((a, b) => {
+    let compareValue = 0;
+    switch (sortBy) {
+      case "monat":
+        compareValue = a.monat.localeCompare(b.monat);
+        break;
+      case "status":
+        compareValue = a.status.localeCompare(b.status);
+        break;
+      case "location":
+        compareValue = a.location.name.localeCompare(b.location.name);
+        break;
+      case "updatedAt":
+        compareValue = new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+        break;
+      default:
+        compareValue = a.monat.localeCompare(b.monat);
+    }
+    return sortOrder === "asc" ? compareValue : -compareValue;
+  });
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedPlans.length / itemsPerPage);
@@ -405,17 +419,26 @@ export default function InputPlanList({
         </div>
       ) : viewMode === "list" ? (
         // Tabellen-Ansicht
-        <div className="overflow-x-auto">
+        <div>
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monat</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bezug</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mechanik/Thema</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">VÖ-Datum</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Standort</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th>
+                {showCompleted ? (
+                  <>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Abgeschlossen am</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">VÖ-Datum</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -424,180 +447,214 @@ export default function InputPlanList({
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{plan.monat}</td>
                   <td className="px-6 py-4 text-sm">{plan.bezug}</td>
                   <td className="px-6 py-4 text-sm">{plan.mechanikThema}</td>
-                  <td className="px-3 py-4 text-sm">
-                    <select
-                      value={plan.status}
-                      onChange={(e) => handleStatusChange(plan.id, e.target.value)}
-                      className={`px-2 py-1 text-xs rounded-full font-medium border-0 cursor-pointer ${
-                        plan.status === "DRAFT"
-                          ? "bg-gray-100 text-gray-700"
-                          : plan.status === "IN_PROGRESS"
-                          ? "bg-blue-100 text-blue-700"
-                          : plan.status === "REVIEW"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : plan.status === "APPROVED"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-purple-100 text-purple-700"
-                      }`}
-                      disabled={plan.status === "COMPLETED"}
-                    >
-                      <option value="DRAFT">Entwurf</option>
-                      <option value="IN_PROGRESS">In Bearbeitung</option>
-                      <option value="REVIEW">Review</option>
-                      <option value="APPROVED">Freigegeben</option>
-                      {plan.status === "COMPLETED" && (
-                        <option value="COMPLETED">Abgeschlossen</option>
-                      )}
-                    </select>
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    {plan.voeDate
-                      ? new Date(plan.voeDate).toLocaleDateString('de-DE')
-                      : plan.voe
-                        ? new Date(plan.voe).toLocaleDateString('de-DE')
-                        : '-'}
-                  </td>
                   <td className="px-6 py-4 text-sm">{plan.location.name}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(plan)}
-                        className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-                      >
-                        Bearbeiten
-                      </button>
-                      <button
-                        onClick={() => handleShowHistory(plan.id)}
-                        className="text-gray-600 hover:text-gray-900"
-                        title="Historie anzeigen"
-                      >
-                        <ClockIcon className="h-4 w-4" />
-                      </button>
-                      {plan.status === "APPROVED" && !showCompleted && (
-                        <button
-                          onClick={() => {
-                            setSelectedIds(new Set([plan.id]));
-                            setConvertInputPlans([plan]);
-                            setShowConvertModal(true);
-                          }}
-                          className={`text-sm font-medium ${
-                            plan.voe || plan.voeDate
-                              ? "text-green-600 hover:text-green-900"
-                              : "text-gray-400 cursor-not-allowed"
-                          }`}
-                          disabled={!plan.voe && !plan.voeDate}
-                          title={!plan.voe && !plan.voeDate ? "VÖ-Datum erforderlich" : "In Redaktionsplan übertragen"}
+                  {showCompleted ? (
+                    <>
+                      <td className="px-6 py-4 text-sm">
+                        {new Date(plan.updatedAt).toLocaleDateString('de-DE')}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleStatusChange(plan.id, "IN_PROGRESS")}
+                            className="text-green-600 hover:text-green-900 text-sm font-medium"
+                            title="Reaktivieren"
+                          >
+                            Reaktivieren
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (window.confirm("Wirklich löschen?")) {
+                                await fetch(`/api/inputplan/${plan.id}`, { method: "DELETE" });
+                                fetchInputPlans();
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-900 text-sm font-medium"
+                            title="Endgültig löschen"
+                          >
+                            Löschen
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-6 py-4">
+                        <select
+                          value={plan.status}
+                          onChange={(e) => handleStatusChange(plan.id, e.target.value)}
+                          className="text-sm border rounded px-2 py-1"
                         >
-                          → RedakPlan
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                          <option value="DRAFT">Entwurf</option>
+                          <option value="IN_PROGRESS">In Bearbeitung</option>
+                          <option value="REVIEW">Review</option>
+                          <option value="APPROVED">Freigabe</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {plan.voeDate
+                          ? new Date(plan.voeDate).toLocaleDateString('de-DE')
+                          : plan.voe
+                            ? new Date(plan.voe).toLocaleDateString('de-DE')
+                            : '-'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEdit(plan)}
+                            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                          >
+                            Bearbeiten
+                          </button>
+                          <button
+                            onClick={() => handleShowHistory(plan.id)}
+                            className="text-gray-600 hover:text-gray-900"
+                            title="Historie anzeigen"
+                          >
+                            <ClockIcon className="h-4 w-4" />
+                          </button>
+                          {plan.status === "APPROVED" && (
+                            <button
+                              onClick={() => {
+                                setConvertInputPlans([plan]);
+                                setSelectedIds(new Set([plan.id]));
+                                setShowConvertModal(true);
+                              }}
+                              className={`text-sm font-medium ${
+                                plan.voe || plan.voeDate
+                                  ? "text-green-600 hover:text-green-900"
+                                  : "text-gray-400 cursor-not-allowed"
+                              }`}
+                              disabled={!plan.voe && !plan.voeDate}
+                              title={!plan.voe && !plan.voeDate ? "VÖ-Datum erforderlich" : "In Redaktionsplan übertragen"}
+                            >
+                              → RedakPlan
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
+          {totalPages > 1 && (
+            <div className="mt-4 flex justify-center">
+              <nav className="flex space-x-2">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === i + 1
+                        ? "bg-indigo-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </nav>
+            </div>
+          )}
         </div>
       ) : (
         // Kanban-Ansicht
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {Object.entries(
-            showCompleted 
-              ? { COMPLETED: "Abgeschlossen" }  // Nur Abgeschlossen in der Abgeschlossen-Ansicht
-              : {
-                  DRAFT: "Entwurf",
-                  IN_PROGRESS: "In Bearbeitung", 
-                  REVIEW: "Review",
-                  APPROVED: "Freigegeben"
-                  // COMPLETED wird ausgelassen
-                }
-          ).map(([status, label]) => (
-            <div key={status} className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-700 mb-3">{label}</h3>
-              <div className="space-y-2">
-                {(groupedPlans[status] || []).map((plan) => (
-                  <div
-                    key={plan.id}
-                    className="bg-white p-3 rounded shadow hover:shadow-md transition-shadow"
-                  >
-                    <div 
-                      className="cursor-pointer"
-                      onClick={() => handleEdit(plan)}
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {Object.entries(
+              showCompleted 
+                ? { COMPLETED: "Abgeschlossen" }  // Nur Abgeschlossen in der Abgeschlossen-Ansicht
+                : {
+                    DRAFT: "Entwurf",
+                    IN_PROGRESS: "In Bearbeitung", 
+                    REVIEW: "Review",
+                    APPROVED: "Freigegeben"
+                    // COMPLETED wird ausgelassen
+                  }
+            ).map(([status, label]) => (
+              <div key={status} className="bg-gray-50 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-700 mb-3">{label}</h3>
+                <div className="space-y-2">
+                  {(groupedPlans[status] || []).map((plan) => (
+                    <div
+                      key={plan.id}
+                      className="bg-white p-3 rounded shadow hover:shadow-md transition-shadow"
                     >
-                      <h4 className="font-medium text-sm">{plan.monat}</h4>
-                      <p className="text-xs text-gray-600 mt-1">{plan.bezug}</p>
-                      <p className="text-xs text-gray-500 mt-1">{plan.mechanikThema}</p>
-                      <p className="text-xs text-gray-400 mt-2">{plan.location.name}</p>
-                      {plan.voeDate && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          VÖ: {new Date(plan.voeDate).toLocaleDateString('de-DE')}
-                        </p>
-                      )}
-                      {plan.flag && (
-                        <span className="inline-block mt-1 px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
-                          Markiert
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between mb-2">
-                      <select
-                        value={plan.status}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          handleStatusChange(plan.id, e.target.value);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className={`px-2 py-1 text-xs rounded-full font-medium border-0 cursor-pointer ${
-                          plan.status === "DRAFT"
-                            ? "bg-gray-100 text-gray-700"
-                            : plan.status === "IN_PROGRESS"
-                            ? "bg-blue-100 text-blue-700"
-                            : plan.status === "REVIEW"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : plan.status === "APPROVED"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-purple-100 text-purple-700"
-                        }`}
-                        disabled={plan.status === "COMPLETED"}
+                      <div 
+                        className="cursor-pointer"
+                        onClick={() => handleEdit(plan)}
                       >
-                        <option value="DRAFT">Entwurf</option>
-                        <option value="IN_PROGRESS">In Bearbeitung</option>
-                        <option value="REVIEW">Review</option>
-                        <option value="APPROVED">Freigegeben</option>
-                        {plan.status === "COMPLETED" && (
-                          <option value="COMPLETED">Abgeschlossen</option>
+                        <h4 className="font-medium text-sm">{plan.monat}</h4>
+                        <p className="text-xs text-gray-600 mt-1">{plan.bezug}</p>
+                        <p className="text-xs text-gray-500 mt-1">{plan.mechanikThema}</p>
+                        <p className="text-xs text-gray-400 mt-2">{plan.location.name}</p>
+                        {plan.voeDate && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            VÖ: {new Date(plan.voeDate).toLocaleDateString('de-DE')}
+                          </p>
                         )}
-                      </select>
-                      <span className="text-xs text-gray-500">
-                        {plan.location.name}
-                      </span>
+                        {plan.flag && (
+                          <span className="inline-block mt-1 px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
+                            Markiert
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShowHistory(plan.id);
+                          }}
+                          className="text-gray-500 hover:text-gray-700"
+                          title="Historie anzeigen"
+                        >
+                          <ClockIcon className="h-3.5 w-3.5" />
+                        </button>
+                        {plan.status === "APPROVED" && !showCompleted && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTransferToRedakPlan(plan);
+                            }}
+                            className={`text-xs font-medium py-1 px-2 rounded ${
+                              plan.voe || plan.voeDate
+                                ? "bg-green-100 text-green-700 hover:bg-green-200" 
+                                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            }`}
+                            disabled={!plan.voe && !plan.voeDate}
+                            title={!plan.voe && !plan.voeDate ? "VÖ-Datum erforderlich" : "In Redaktionsplan übertragen"}
+                          >
+                            → RedakPlan
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {viewMode === "list" && totalPages > 1 && (
-        <div className="mt-4 flex justify-center">
-          <nav className="flex space-x-2">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === i + 1
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                {i + 1}
-              </button>
             ))}
-          </nav>
+          </div>
+          {totalPages > 1 && (
+            <div className="mt-4 flex justify-center">
+              <nav className="flex space-x-2">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 py-1 rounded ${
+                      currentPage === i + 1
+                        ? "bg-indigo-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </nav>
+            </div>
+          )}
         </div>
       )}
 
@@ -609,13 +666,14 @@ export default function InputPlanList({
       {showModal && (
         <InputPlanModal
           isOpen={showModal}
-          onClose={() => {
-            setShowModal(false);
-            setEditingPlan(null);
-          }}
+          onClose={handleModalClose}
           inputPlan={editingPlan}
+          locations={locations} // <--- HIER hinzufügen!
           onSave={async (plan) => {
-            // Erstelle eine Kopie nur mit den Feldern für den PATCH-Body
+            if (!plan.locationId) {
+              toast.error("Bitte einen Standort auswählen!");
+              return;
+            }
             const planToSave = {
               contentPlanId: plan.contentPlanId,
               monat: plan.monat,
@@ -647,21 +705,29 @@ export default function InputPlanList({
               planToSave.voe = new Date(planToSave.voe + "T00:00:00Z").toISOString();
             }
 
-            const response = await fetch(`/api/inputplan/${plan.id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(planToSave),
-            });
-            
-            console.log("PATCH URL:", `/api/inputplan/${plan.id}`);
-            console.log("PATCH Body:", planToSave);
-            
+            let response;
+            if (plan.id) {
+              // Bestehender Plan: PATCH
+              response = await fetch(`/api/inputplan/${plan.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(planToSave),
+              });
+            } else {
+              // Neuer Plan: POST
+              response = await fetch("/api/inputplan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(planToSave),
+              });
+            }
+
             if (!response.ok) {
               const error = await response.json();
               toast.error(error.error || "Fehler beim Speichern");
               return;
             }
-            
+
             toast.success("Änderungen gespeichert!");
             fetchInputPlans();
           }}
@@ -678,6 +744,19 @@ export default function InputPlanList({
           setHistoryPlanId(null);
         }}
       />
+
+      {/* Convert to Redakplan Modal */}
+      {showConvertModal && (
+        <ConvertToRedakModal
+          isOpen={showConvertModal}
+          onClose={() => setShowConvertModal(false)}
+          inputPlans={convertInputPlans}
+          onSuccess={async () => {
+            setShowConvertModal(false);
+            await fetchInputPlans();
+          }}
+        />
+      )}
     </div>
   );
 }
