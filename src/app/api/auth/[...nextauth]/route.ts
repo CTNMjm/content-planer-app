@@ -4,6 +4,11 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
+import { authOptions } from "./authOptions";
+
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -59,7 +64,3 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
-
-const handler = NextAuth(authOptions);
-
-export { handler as GET, handler as POST };

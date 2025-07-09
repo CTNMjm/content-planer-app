@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/authOptions";
 
-// Hilfsfunktion zum Extrahieren des Users aus dem Token
+// Hilfsfunktion zum Extrahieren des Users aus dem Token oder Session
 async function getUserFromRequest(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -146,7 +145,7 @@ export async function PUT(
           data: historyEntries.map((entry) => ({
             ...entry,
             redakPlanId: params.id,
-            action: "UPDATE", // <--- hinzugefügt!
+            action: "UPDATE",
           })),
         });
       }
@@ -173,7 +172,6 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-
     // Historie-Eintrag
     await prisma.redakPlanHistory.create({
       data: {
@@ -185,6 +183,11 @@ export async function DELETE(
         changedById: user.id,
         changedAt: new Date(),
       },
+    });
+
+    // RedakPlan wirklich löschen
+    await prisma.redakPlan.delete({
+      where: { id: params.id },
     });
 
     return NextResponse.json({ success: true });
