@@ -236,6 +236,11 @@ export default function AbgeschlossenContentPlans() {
     return <div className="p-8 text-red-600">Fehler: {error}</div>;
   }
 
+  // Einzigartige Standorte aus den geladenen Plänen extrahieren
+  const locations = Array.from(
+    new Map(contentPlans.map(plan => [plan.location.id, plan.location])).values()
+  );
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -418,6 +423,7 @@ export default function AbgeschlossenContentPlans() {
             alert("Abgeschlossene Pläne können nicht bearbeitet werden. Nutzen Sie 'Reaktivieren' um den Plan wieder zu bearbeiten.");
           }}
           readOnly={true}
+          locations={locations}
         />
       )}
     </div>

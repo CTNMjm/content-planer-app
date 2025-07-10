@@ -57,6 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       oldValue: null,
       newValue: `Erstellt aus ContentPlan: ${contentPlan.id} - ${contentPlan.idee}`,
       changedById: session.user.id,
+      action: "CREATE", // <--- Hinzugefügt
     }
   });
 

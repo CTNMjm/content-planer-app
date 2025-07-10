@@ -58,6 +58,7 @@ interface ContentPlanModalProps {
   contentPlan: ContentPlan | null; // <--- Das muss vorhanden sein!
   onSave: (data: any) => Promise<void>;
   locations: Array<{ id: string; name: string }>;
+  readOnly?: boolean;
 }
 
 interface ConvertToInputModalProps {

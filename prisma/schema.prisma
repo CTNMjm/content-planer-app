@@ -216,7 +216,7 @@ model InputPlanHistory {
   newData      Json?
   createdAt    DateTime  @default(now())
   changedAt    DateTime  @default(now())
-  
+  action        ActionType
 }
 
 model RedakPlan {
@@ -301,4 +301,10 @@ enum ContentStatus {
   REVIEW
   APPROVED
   COMPLETED
+}
+
+enum ActionType {
+  CREATE
+  UPDATE
+  DELETE
 }

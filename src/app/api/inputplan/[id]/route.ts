@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+
+type ActionType = "CREATE" | "UPDATE" | "DELETE";
 import jwt from "jsonwebtoken";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/authOptions";
@@ -178,7 +180,8 @@ export async function PUT(
         await prisma.inputPlanHistory.createMany({
           data: historyEntries.map(entry => ({
             ...entry,
-            inputPlanId: params.id
+            inputPlanId: params.id,
+            action: "UPDATE" as ActionType,
           }))
         });
       }
@@ -276,7 +279,8 @@ export async function PATCH(
         await prisma.inputPlanHistory.createMany({
           data: historyEntries.map(entry => ({
             ...entry,
-            inputPlanId: params.id
+            inputPlanId: params.id,
+            action: "UPDATE" as ActionType,
           }))
         });
       }
@@ -321,6 +325,7 @@ export async function DELETE(
         previousData: deleted,
         newData: Prisma.JsonNull,
         changedAt: new Date(),
+        action: "DELETE" as ActionType,
       }
     });
 
