@@ -58,6 +58,18 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    await prisma.redakPlanHistory.create({
+      data: {
+        redakPlanId: redakPlan.id,
+        changedAt: new Date(),
+        changedById: session.user.id,
+        action: "CREATED_FROM_INPUTPLAN",
+        fieldName: "created_from_inputplan",
+        oldValue: inputPlanId,
+        newValue: null,
+      }
+    });
+
     return NextResponse.json(redakPlan, { status: 201 });
   } catch (error) {
     console.error("Error creating RedakPlan:", error);

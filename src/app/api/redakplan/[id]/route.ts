@@ -103,6 +103,11 @@ export async function PUT(
       ...updateData
     } = data;
 
+    // Datumsfelder korrekt umwandeln
+    if (updateData.voe && typeof updateData.voe === "string") {
+      updateData.voe = new Date(updateData.voe);
+    }
+
     // Erstelle History-Einträge für geänderte Felder
     const allowedFields = Object.keys(updateData);
     const historyEntries: Array<{

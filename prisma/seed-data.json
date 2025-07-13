@@ -974,4 +974,9 @@
       "status": "COMPLETED",
       "locationId": "cmbkufomo0003680tr7qxxejw",
       "createdById": "cmbkufojh0000680ty85x3bu6",
-      "updatedAt
+      "updatedAt": "2025-07-06T11:12:39.349Z",
+      "deletedAt": null,
+      "deletedById": null
+    }
+  ]
+}
