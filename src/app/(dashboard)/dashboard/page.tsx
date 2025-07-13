@@ -11,43 +11,57 @@ export default async function DashboardPage() {
   }
 
   // Lade User mit Locations und Permissions
+  // Hole User inkl. Rolle (falls nicht vorhanden)
+  // Hole User inkl. userLocations, Rollen und Berechtigungen (ohne Relation role)
+  // Hole User inkl. userLocations, Rollen und Berechtigungen (ohne Relation role)
+  // Hole User inkl. limitedLocations-Flag
   const userWithDetails = await prisma.user.findUnique({
     where: { id: session.user.id },
     include: {
       userLocations: {
         include: {
           location: true,
-          roles: {
-            include: {
-              role: true
-            }
-          },
+          roles: { include: { role: true } },
           permissions: true
         }
       }
-    }
-  });
+    },
+  }) as any;
 
-  const isAdmin = userWithDetails?.role === 'ADMIN' || 
-    userWithDetails?.userLocations.some(ul => 
-      ul.roles.some(r => r.role.name === 'LOCATION_ADMIN')
-    );
+  // Prüfe Admin-Status (userWithDetails.role ist String)
+  const isAdmin = userWithDetails?.role === 'ADMIN';
 
-  const locationIds = userWithDetails?.userLocations.map(ul => ul.location.id) || [];
-  const locationCount = locationIds.length;
+  // Erweiterte Benutzerverwaltung: Nutzer mit eingeschränkten Standorten
+  // Wenn userWithDetails.limitedLocations = true, dann nur explizit zugewiesene Standorte anzeigen
+  // Sonst (wie bisher): Admin sieht alle, andere sehen alle Standorte, denen sie zugeordnet sind
+  let locationIds: string[] = [];
+  let locationCount = 0;
+  if (isAdmin) {
+    // Admin sieht alle Standorte
+    const allLocations = await prisma.location.findMany({ select: { id: true } });
+    locationIds = allLocations.map((l: any) => l.id);
+    locationCount = locationIds.length;
+  } else if (userWithDetails?.limitedLocations) {
+    // Nutzer mit eingeschränkten Standorten sieht nur explizit zugewiesene
+    locationIds = userWithDetails?.userLocations?.map((ul: any) => ul.location.id) || [];
+    locationCount = locationIds.length;
+  } else {
+    // Standard: Nutzer sieht alle Standorte, denen er zugeordnet ist (wie bisher)
+    locationIds = userWithDetails?.userLocations?.map((ul: any) => ul.location.id) || [];
+    locationCount = locationIds.length;
+  }
 
-  // Lade Statistiken
-  const [contentPlanCount, inputPlanCount, redakPlanCount] = await Promise.all([
-    prisma.contentPlan.count({
-      where: { locationId: { in: locationIds } }
-    }),
-    prisma.inputPlan.count({
-      where: { locationId: { in: locationIds } }
-    }),
-    prisma.redakPlan.count({
-      where: { locationId: { in: locationIds } }
-    })
-  ]);
+  // Lade Statistiken (nur zählen, wenn mind. 1 Standort)
+  let contentPlanCount = 0;
+  let inputPlanCount = 0;
+  let redakPlanCount = 0;
+  if (locationIds.length > 0) {
+    [contentPlanCount, inputPlanCount, redakPlanCount] = await Promise.all([
+      prisma.contentPlan.count({ where: { locationId: { in: locationIds } } }),
+      prisma.inputPlan.count({ where: { locationId: { in: locationIds } } }),
+      prisma.redakPlan.count({ where: { locationId: { in: locationIds } } })
+    ]);
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -249,11 +263,11 @@ export default async function DashboardPage() {
           <div>
             <h3 className="font-medium mb-2">Ihre Standorte:</h3>
             <div className="space-y-2">
-              {userWithDetails?.userLocations.map((ul) => (
+              {userWithDetails?.userLocations.map((ul: any) => (
                 <div key={ul.id} className="bg-white rounded p-3">
                   <p className="font-medium">{ul.location.name}</p>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {ul.roles.map((r) => (
+                    {ul.roles.map((r: any) => (
                       <span key={r.id} className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
                         {r.role.name}
                       </span>
@@ -266,18 +280,38 @@ export default async function DashboardPage() {
           <div>
             <h3 className="font-medium mb-2">Ihre Berechtigungen:</h3>
             <div className="bg-white rounded p-3">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                {userWithDetails?.userLocations.flatMap(ul => 
-                  ul.permissions.map(p => (
-                    <div key={`${ul.id}-${p.id}`} className="flex items-center">
-                      <svg className="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      {p.name}
+              {isAdmin ? (
+                <div className="text-green-700 font-semibold">Sie sind Administrator und haben alle Rechte an allen Standorten.</div>
+              ) : (
+                <div className="space-y-4">
+                  {userWithDetails?.userLocations.map((ul: any) => (
+                    <div key={ul.id} className="border-b pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
+                      <div className="font-medium text-gray-800 flex items-center gap-2">
+                        <span className="text-blue-700">{ul.location.name}</span>
+                        {ul.roles.length > 0 && (
+                          <span className="text-xs text-gray-500">(
+                            {ul.roles.map((r: any) => r.role.name).join(", ")}
+                          )</span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {ul.permissions.length > 0 ? (
+                          ul.permissions.map((p: any) => (
+                            <span key={p.id} className="inline-flex items-center px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
+                              <svg className="w-4 h-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                              {p.name}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-gray-400">Keine Berechtigungen</span>
+                        )}
+                      </div>
                     </div>
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

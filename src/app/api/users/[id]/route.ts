@@ -21,6 +21,7 @@ export async function PUT(
       name: body.name,
       role: body.role,
       isActive: body.isActive,
+      limitedLocations: typeof body.limitedLocations === 'boolean' ? body.limitedLocations : undefined,
     };
 
     // Nur wenn ein neues Passwort gesetzt wurde
@@ -37,10 +38,23 @@ export async function PUT(
         name: true,
         role: true,
         isActive: true,
+        limitedLocations: true, // <--- NEU
         createdAt: true,
         updatedAt: true,
       },
     });
+
+    // UserLocation-Relationen synchronisieren
+    if (Array.isArray(body.locationIds)) {
+      // Lösche alle bisherigen UserLocations
+      await prisma.userLocation.deleteMany({ where: { userId: params.id } });
+      // Lege neue UserLocations an
+      for (const locationId of body.locationIds) {
+        await prisma.userLocation.create({
+          data: { userId: params.id, locationId }
+        });
+      }
+    }
 
     return NextResponse.json(user);
   } catch (error) {
@@ -98,13 +112,14 @@ export async function PATCH(
     
     const user = await prisma.user.update({
       where: { id: params.id },
-      data: { isActive: body.isActive },
+      data: { isActive: body.isActive, limitedLocations: typeof body.limitedLocations === 'boolean' ? body.limitedLocations : undefined }, // <--- NEU
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
         isActive: true,
+        limitedLocations: true, // <--- NEU
         createdAt: true,
         updatedAt: true,
       },

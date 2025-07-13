@@ -9,8 +9,10 @@ interface User {
   name: string | null;
   role: "ADMIN" | "AGENTUR" | "KUNDE";
   isActive: boolean;
+  limitedLocations?: boolean;
   createdAt: string;
   updatedAt: string;
+  userLocations?: { id: string; location: { id: string; name: string } }[];
 }
 
 export default function UserManagement() {
@@ -187,6 +189,9 @@ export default function UserManagement() {
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Zugewiesene Standorte
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Erstellt am
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -217,6 +222,12 @@ export default function UserManagement() {
                   >
                     {user.isActive ? "Aktiv" : "Inaktiv"}
                   </button>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm max-w-xs overflow-hidden text-ellipsis" title={user.userLocations?.map((ul: any) => ul.location.name).join(", ") || "-"}
+                >
+                  {user.userLocations && user.userLocations.length > 0
+                    ? user.userLocations.map((ul: any) => ul.location.name).join(", ")
+                    : <span className="text-gray-400">-</span>}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(user.createdAt).toLocaleDateString("de-DE")}

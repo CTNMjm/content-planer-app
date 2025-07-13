@@ -20,8 +20,15 @@ export async function GET(request: NextRequest) {
         name: true,
         role: true,
         isActive: true,
+        limitedLocations: true,
         createdAt: true,
         updatedAt: true,
+        userLocations: {
+          select: {
+            id: true,
+            location: { select: { id: true, name: true } },
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -46,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, name, password, role, isActive } = body;
+    const { email, name, password, role, isActive, limitedLocations, locationIds } = body;
 
     // Prüfe ob User bereits existiert
     const existingUser = await prisma.user.findUnique({
@@ -70,8 +77,15 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         role,
         isActive,
+        limitedLocations: !!limitedLocations,
       },
     });
+    // UserLocation-Relationen anlegen
+    if (Array.isArray(locationIds) && locationIds.length > 0) {
+      for (const locationId of locationIds) {
+        await prisma.userLocation.create({ data: { userId: user.id, locationId } });
+      }
+    }
 
     // Passwort nicht zurückgeben
     const { password: _, ...userWithoutPassword } = user;
