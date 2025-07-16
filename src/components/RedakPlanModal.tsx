@@ -72,28 +72,21 @@ export function RedakPlanModal({
       setFormData({
         ...redakPlan,
         voe: redakPlan.voe ? new Date(redakPlan.voe).toISOString().split('T')[0] : "",
-      });
-    } else {
-      // Reset form for new RedakPlan
-      setFormData({
-        id: "",
-        monat: "",
-        bezug: "",
-        mechanikThema: "",
-        idee: "",
-        platzierung: "",
-        voe: "",
-        status: "DRAFT",
-        publiziert: false,
-        locationId: locations[0]?.id || "",
-        location: {
-          id: locations[0]?.id || "",
-          name: locations[0]?.name || "",
+        locationId: redakPlan.locationId || locations[0]?.id || "",
+        location: redakPlan.location || {
+          id: redakPlan.locationId || locations[0]?.id || "",
+          name: locations.find(l => l.id === (redakPlan.locationId || locations[0]?.id))?.name || "",
         },
-        inputPlan: null,
-        createdAt: "",
-        updatedAt: "",
       });
+    } else if (locations.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        locationId: prev.locationId || locations[0]?.id || "",
+        location: {
+          id: prev.locationId || locations[0]?.id || "",
+          name: locations.find(l => l.id === (prev.locationId || locations[0]?.id))?.name || "",
+        },
+      }));
     }
   }, [redakPlan, locations]);
 

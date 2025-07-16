@@ -134,10 +134,13 @@ export async function PUT(
       updatedAt,
       createdById,
       updatedById,
-      locationId,
       veröffentlichungsdatum,
       ...updateData
     } = data;
+    // locationId explizit übernehmen, falls im Request enthalten
+    if (typeof data.locationId !== 'undefined') {
+      updateData.locationId = data.locationId;
+    }
 
     // Erstelle History-Einträge für geänderte Felder
     const historyEntries: Array<{
@@ -233,6 +236,10 @@ export async function PATCH(
       veröffentlichungsdatum,
       ...updateData
     } = body;
+    // locationId explizit übernehmen, falls im Request enthalten
+    if (typeof body.locationId !== 'undefined') {
+      updateData.locationId = body.locationId;
+    }
 
     // Hole den aktuellen Stand für History-Vergleich
     const currentPlan = await prisma.inputPlan.findUnique({

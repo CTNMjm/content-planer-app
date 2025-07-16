@@ -99,9 +99,12 @@ export async function PUT(
       updatedAt,
       createdById,
       updatedById,
-      locationId,
       ...updateData
     } = data;
+    // locationId explizit übernehmen, falls im Request enthalten
+    if (typeof data.locationId !== 'undefined') {
+      updateData.locationId = data.locationId;
+    }
 
     // Datumsfelder korrekt umwandeln
     if (updateData.voe && typeof updateData.voe === "string") {

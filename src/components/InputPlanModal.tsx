@@ -100,9 +100,15 @@ export function InputPlanModal({
         voe: inputPlan.voe
           ? new Date(inputPlan.voe).toISOString().split("T")[0] // immer "YYYY-MM-DD"
           : "",
+        locationId: inputPlan.locationId || locations[0]?.id || "",
       });
+    } else if (locations.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        locationId: prev.locationId || locations[0]?.id || "",
+      }));
     }
-  }, [inputPlan]);
+  }, [inputPlan, locations]);
 
   const validateForm = () => {
     const newErrors: { voe?: string } = {};
@@ -251,7 +257,7 @@ export function InputPlanModal({
                             ))}
                           </select>
                         </div>
-						<div>
+            <div>
                           <label className="block text-sm font-medium text-gray-700">Mechanik/Thema *</label>
                           <input
                             type="text"
@@ -274,8 +280,8 @@ export function InputPlanModal({
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           />
                         </div>
-						
-						         <div>
+            
+                     <div>
                           <label className="block text-sm font-medium text-gray-700">Platzierung *</label>
                           <input
                             type="text"
@@ -286,7 +292,7 @@ export function InputPlanModal({
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           />
                         </div>
-									          <div>
+                            <div>
                           <label className="block text-sm font-medium text-gray-700">Format</label>
                           <input
                             type="text"
@@ -341,10 +347,10 @@ export function InputPlanModal({
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           />
                         </div>
-						
-			
-						
-						 <div>
+            
+      
+            
+             <div>
                           <label className="block text-sm font-medium text-gray-700">Action</label>
                           <input
                             type="text"
@@ -365,8 +371,8 @@ export function InputPlanModal({
                             className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
                           />
                         </div>
-						
-						<div>
+            
+            <div>
                           <label className="block text-sm font-medium text-gray-700">Mehrwert</label>
                           <input
                             type="text"
