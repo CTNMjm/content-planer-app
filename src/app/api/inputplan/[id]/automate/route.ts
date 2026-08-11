@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../../auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
+import { getSessionUser, canAccessLocation } from "@/lib/location-access";
 import axios from "axios";
 
 const N8N_WEBHOOK_URL = process.env.N8N_AI_WEBHOOK_URL || "https://dein-n8n-server/webhook/ai-generate";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  const user = await getSessionUser();
+  if (!user) {
     return new Response(JSON.stringify({ error: "Nicht eingeloggt" }), { status: 401 });
   }
 
@@ -23,9 +22,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!inputPlan) {
       return new Response(JSON.stringify({ error: "ContentPlan nicht gefunden" }), { status: 404 });
     }
-    
+
     if (!inputPlan.location) {
         return new Response(JSON.stringify({ error: "Location für ContentPlan nicht gefunden" }), { status: 400 });
+    }
+
+    if (!(await canAccessLocation(user, inputPlan.locationId))) {
+      return new Response(
+        JSON.stringify({ error: "Kein Zugriff auf diesen Standort" }),
+        { status: 403 }
+      );
     }
 
     // Daten für den Webhook vorbereiten - angepasst an ContentPlan Felder

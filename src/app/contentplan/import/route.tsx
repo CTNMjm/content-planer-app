@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
 import { ContentStatus } from "@prisma/client";
+import { getSessionUser, canAccessLocation } from "@/lib/location-access";
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -19,6 +18,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File and locationId required" }, { status: 400 });
     }
 
+    if (!(await canAccessLocation(user, locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
+      );
+    }
+
     const text = await file.text();
     const lines = text.split("\n").filter(line => line.trim());
     
@@ -28,6 +34,13 @@ export async function POST(request: NextRequest) {
 
     const headers = lines[0].split(",").map(h => h.trim());
     const requiredFields = ["monat", "bezug", "mechanikThema", "idee", "platzierung"];
+    // Nur fachliche Felder aus der CSV übernehmen (keine IDs/Audit-Felder)
+    const allowedFields = [
+      "monat", "bezug", "mehrwert", "mechanikThema", "idee", "platzierung",
+      "status", "implementationLevel", "creativeFormat", "creativeBriefingExample",
+      "copyExample", "copyExampleCustomized", "firstCommentForEngagement",
+      "notes", "action",
+    ];
     
     // Validierung der Pflichtfelder
     for (const field of requiredFields) {
@@ -46,7 +59,7 @@ export async function POST(request: NextRequest) {
         
         const data: any = {};
         headers.forEach((header, index) => {
-          if (cleanValues[index]) {
+          if (cleanValues[index] && allowedFields.includes(header)) {
             data[header] = cleanValues[index];
           }
         });
@@ -70,7 +83,7 @@ export async function POST(request: NextRequest) {
           data: {
             ...data,
             locationId,
-            createdById: session.user.id,
+            createdById: user.id,
             status: data.status || ContentStatus.DRAFT,
           },
         });

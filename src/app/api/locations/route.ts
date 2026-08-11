@@ -2,18 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
+import { getSessionUser, getAllowedLocationIds } from "@/lib/location-access";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json([], { status: 200 });
+    const user = await getSessionUser();
+    if (!user) {
+      return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
     }
 
-    // Gib für alle eingeloggten User alle aktiven Standorte zurück
+    // Nur aktive Standorte, auf die der User Zugriff hat (Admin: alle)
+    const allowed = await getAllowedLocationIds(user);
     const locations = await prisma.location.findMany({
-      where: { status: "ACTIVE" },
+      where: {
+        status: "ACTIVE",
+        ...(allowed === null ? {} : { id: { in: allowed } }),
+      },
       orderBy: { name: "asc" },
     });
 

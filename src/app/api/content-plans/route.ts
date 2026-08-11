@@ -1,43 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
+import {
+  getSessionUser,
+  getAllowedLocationIds,
+  canAccessLocation,
+  locationScope,
+} from "@/lib/location-access";
 
 export const GET = async (req: NextRequest) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
     }
-    // Ab hier ist session.user garantiert vorhanden!
 
     // Query Parameter auslesen
     const { searchParams } = new URL(req.url);
     const locationId = searchParams.get("locationId");
     const status = searchParams.get("status");
 
-    // Where-Klausel aufbauen
-    const where: any = {};
-    
+    // Where-Klausel aufbauen: immer auf erlaubte Locations eingeschränkt
+    const allowed = await getAllowedLocationIds(user);
+    const where: any = { ...locationScope(allowed) };
+
     // Nach Status filtern
     if (status) {
       where.status = status;
     }
-    
-    // Nach Location filtern
+
+    // Nach Location filtern (nur wenn der User darauf Zugriff hat)
     if (locationId) {
+      if (!(await canAccessLocation(user, locationId))) {
+        return NextResponse.json(
+          { error: "Kein Zugriff auf diesen Standort" },
+          { status: 403 }
+        );
+      }
       where.locationId = locationId;
     }
-
-    // Nur Locations des Users (optional - je nach Anforderung)
-    // where.location = {
-    //   userLocations: {
-    //     some: {
-    //       userId: session.user.id
-    //     }
-    //   }
-    // };
 
     // Hole gefilterte Content-Pläne
     const contentPlans = await prisma.contentPlan.findMany({
@@ -57,12 +57,6 @@ export const GET = async (req: NextRequest) => {
       }
     });
 
-    // Die Felder sind bereits in den Daten, Prisma gibt alle Felder des Models zurück
-    // Wir können zur Sicherheit loggen:
-    if (contentPlans.length > 0) {
-      console.log("Sample content plan fields:", Object.keys(contentPlans[0]));
-    }
-
     return NextResponse.json(contentPlans);
   } catch (error) {
     console.error("Error fetching content plans:", error);
@@ -75,27 +69,12 @@ export const GET = async (req: NextRequest) => {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
     }
 
-    console.log("session.user.id:", session.user.id);
-
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id }
-    });
-    if (!dbUser) {
-      return NextResponse.json(
-        { error: "User für createdById nicht gefunden!" },
-        { status: 400 }
-      );
-    }
-
     const body = await request.json();
-    console.log("Body empfangen:", body);
-    console.log(request.body)
 
     const {
       monat,
@@ -116,6 +95,13 @@ export async function POST(request: NextRequest) {
       action
     } = body;
 
+    if (!(await canAccessLocation(user, locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
+      );
+    }
+
     const contentPlan = await prisma.contentPlan.create({
       data: {
         monat,
@@ -126,7 +112,7 @@ export async function POST(request: NextRequest) {
         platzierung,
         status: status || "DRAFT",
         locationId,
-        createdById: session.user.id,
+        createdById: user.id,
         implementationLevel: implementationLevel || null,
         creativeFormat: creativeFormat || null,
         creativeBriefingExample: creativeBriefingExample || null,
@@ -136,7 +122,7 @@ export async function POST(request: NextRequest) {
         notes: notes || null,
         action: action || null,
         statusChangedAt: new Date(),
-        statusChangedById: session.user.id,
+        statusChangedById: user.id,
       },
       include: {
         location: true

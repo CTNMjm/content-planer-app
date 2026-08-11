@@ -1,12 +1,11 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
+import { getSessionUser, canAccessLocation } from "@/lib/location-access";
 
 // POST: Kopiert einen ContentPlan nach InputPlan
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  const user = await getSessionUser();
+  if (!user) {
     return new Response(JSON.stringify({ error: "Nicht eingeloggt" }), { status: 401 });
   }
   const id = params.id;
@@ -14,6 +13,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const contentPlan = await prisma.contentPlan.findUnique({ where: { id } });
   if (!contentPlan) {
     return new Response(JSON.stringify({ error: "Nicht gefunden" }), { status: 404 });
+  }
+  if (!(await canAccessLocation(user, contentPlan.locationId))) {
+    return new Response(
+      JSON.stringify({ error: "Kein Zugriff auf diesen Standort" }),
+      { status: 403 }
+    );
   }
   if (contentPlan.status === "COMPLETED") {
     return new Response(JSON.stringify({ error: "Abgeschlossene Beiträge können nicht mehr übertragen werden." }), { status: 400 });
@@ -42,8 +47,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       platzierung: contentPlan.platzierung,
       status: "DRAFT", // InputPlan startet immer als Entwurf!
       locationId: contentPlan.locationId,
-      createdById: session.user.id,
-      updatedById: session.user.id,
+      createdById: user.id,
+      updatedById: user.id,
     },
   });
 
@@ -56,7 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       field: "created_from_contentplan",
       oldValue: null,
       newValue: `Erstellt aus ContentPlan: ${contentPlan.id} - ${contentPlan.idee}`,
-      changedById: session.user.id,
+      changedById: user.id,
       action: "CREATE", // <--- Hinzugefügt
     }
   });
@@ -66,9 +71,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     where: { id: contentPlan.id },
     data: { 
       status: "COMPLETED",
-      updatedById: session.user.id,
+      updatedById: user.id,
       statusChangedAt: new Date(),
-      statusChangedById: session.user.id,
+      statusChangedById: user.id,
     },
   });
 
@@ -80,7 +85,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       fieldName: 'status',
       oldValue: 'APPROVED',
       newValue: 'COMPLETED',
-      changedById: session.user.id,
+      changedById: user.id,
       metadata: JSON.stringify({
         reason: 'Erfolgreich in Input-Plan übertragen',
         inputPlanId: inputPlan.id,

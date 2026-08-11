@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
+import { getSessionUser, canAccessLocation } from "@/lib/location-access";
 
 export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -17,6 +16,13 @@ export async function GET(request: NextRequest) {
 
   if (!locationId) {
     return NextResponse.json({ error: "LocationId required" }, { status: 400 });
+  }
+
+  if (!(await canAccessLocation(user, locationId))) {
+    return NextResponse.json(
+      { error: "Kein Zugriff auf diesen Standort" },
+      { status: 403 }
+    );
   }
 
   try {

@@ -16,6 +16,16 @@ echo "--- /dashboard ohne login (erwartet 307/302):"
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3100/dashboard
 echo "--- api history ohne login (erwartet 401):"
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3100/api/inputplan/test123/history
+echo "--- api inputplan-liste ohne login (erwartet 401):"
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3100/api/inputplan
+echo "--- api content-plans ohne login (erwartet 401):"
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3100/api/content-plans
+echo "--- api locations ohne login (erwartet 401):"
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3100/api/locations
+echo "--- api redakplan ohne login (erwartet 401):"
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:3100/api/redakplan
+echo "--- contentplan-export ohne login (erwartet 307 via Middleware):"
+curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:3100/contentplan/export?locationId=x&fields=monat"
 echo "--- register mit leerem body (flag lokal an, erwartet 400 Validation):"
 curl -s -X POST http://localhost:3100/api/register -H 'Content-Type: application/json' -d '{}' -o /tmp/reg.json -w "%{http_code}\n"
 cat /tmp/reg.json; echo

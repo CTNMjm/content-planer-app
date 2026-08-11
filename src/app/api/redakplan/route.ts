@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
-import { ContentStatus } from "@prisma/client"; // <--- das ist der Enum!
+import {
+  getSessionUser,
+  getAllowedLocationIds,
+  canAccessLocation,
+  locationScope,
+} from "@/lib/location-access";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
     }
 
     const body = await request.json();
-    // Optional: Logge den Body zur Kontrolle
-    console.log("RedakPlan POST body:", body);
 
     const {
       monat,
@@ -29,6 +30,13 @@ export async function POST(request: NextRequest) {
       inputPlanId
     } = body;
 
+    if (!(await canAccessLocation(user, locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
+      );
+    }
+
     const data: any = {
       monat,
       bezug,
@@ -40,8 +48,8 @@ export async function POST(request: NextRequest) {
       locationId,
       status: "IN_PROGRESS",
       inputPlanId,
-      createdById: session.user.id,
-      updatedById: session.user.id,
+      createdById: user.id,
+      updatedById: user.id,
     };
 
     if (voe) {
@@ -62,7 +70,7 @@ export async function POST(request: NextRequest) {
       data: {
         redakPlanId: redakPlan.id,
         changedAt: new Date(),
-        changedById: session.user.id,
+        changedById: user.id,
         action: "CREATED_FROM_INPUTPLAN",
         fieldName: "created_from_inputplan",
         oldValue: inputPlanId,
@@ -79,8 +87,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json({ error: "Nicht eingeloggt" }, { status: 401 });
     }
 
@@ -88,11 +96,11 @@ export async function GET(request: NextRequest) {
     const monat = searchParams.get("monat");
     const status = searchParams.get("status");
 
-    // Optional: Logge die Suchparameter zur Kontrolle
-    console.log("RedakPlan GET searchParams:", { monat, status });
-
     const allowedStatus = ["DRAFT", "IN_PROGRESS", "REVIEW", "APPROVED", "COMPLETED"];
-    const where: any = { createdById: session.user.id };
+    // Scope: alle Pläne der Standorte, auf die der User Zugriff hat
+    // (vorher: nur eigene Pläne via createdById — Kollegen am selben Standort sahen nichts)
+    const allowed = await getAllowedLocationIds(user);
+    const where: any = { ...locationScope(allowed) };
     if (monat) where.monat = monat;
     if (status && allowedStatus.includes(status)) where.status = status;
 

@@ -1,18 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
+import { getSessionUser, canAccessLocation } from "@/lib/location-access";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json(
         { error: "Nicht authentifiziert" },
         { status: 401 }
+      );
+    }
+
+    // Hole den ContentPlan zuerst (für Location-Check und Erstellungseintrag)
+    const contentPlan = await prisma.contentPlan.findUnique({
+      where: { id: params.id },
+      include: {
+        createdBy: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!contentPlan) {
+      return NextResponse.json(
+        { error: "Content-Plan nicht gefunden" },
+        { status: 404 }
+      );
+    }
+
+    if (!(await canAccessLocation(user, contentPlan.locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
       );
     }
 
@@ -28,19 +54,6 @@ export async function GET(
         },
       },
       orderBy: { changedAt: 'desc' },
-    });
-
-    // Hole auch den Erstellungseintrag aus dem ContentPlan
-    const contentPlan = await prisma.contentPlan.findUnique({
-      where: { id: params.id },
-      include: {
-        createdBy: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
     });
 
     // Füge Erstellungseintrag hinzu, falls ContentPlan existiert

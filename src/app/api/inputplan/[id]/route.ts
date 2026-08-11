@@ -1,32 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { getSessionUser, canAccessLocation } from "@/lib/location-access";
 
 type ActionType = "CREATE" | "UPDATE" | "DELETE";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../auth/[...nextauth]/authOptions";
-
-// Hilfsfunktion zum Extrahieren des Users aus der Session
-async function getUserFromRequest(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return null;
-    return await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { id: true, email: true, name: true }
-    });
-  } catch (error) {
-    console.error("getUserFromRequest error:", error);
-    return null;
-  }
-}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getUserFromRequest(request);
+    const user = await getSessionUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -48,6 +32,13 @@ export async function GET(
       return NextResponse.json({ error: "InputPlan not found" }, { status: 404 });
     }
 
+    if (!(await canAccessLocation(user, inputPlan.locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(inputPlan);
   } catch (error) {
     console.error("Error fetching input plan:", error);
@@ -63,8 +54,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json(
         { error: "Nicht authentifiziert" },
         { status: 401 }
@@ -72,7 +63,7 @@ export async function PUT(
     }
 
     const data = await request.json();
-    
+
     // Hole den aktuellen Stand für History-Vergleich
     const currentPlan = await prisma.inputPlan.findUnique({
       where: { id: params.id }
@@ -84,7 +75,14 @@ export async function PUT(
         { status: 404 }
       );
     }
-    
+
+    if (!(await canAccessLocation(user, currentPlan.locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
+      );
+    }
+
     // Entferne alle Felder, die nicht direkt geupdated werden können
     const {
       id,
@@ -96,11 +94,23 @@ export async function PUT(
       updatedAt,
       createdById,
       updatedById,
+      deletedAt,
+      deletedById,
       veröffentlichungsdatum,
       ...updateData
     } = data;
-    // locationId explizit übernehmen, falls im Request enthalten
+    // locationId explizit übernehmen, falls im Request enthalten —
+    // aber nur in Standorte, auf die der User Zugriff hat
     if (typeof data.locationId !== 'undefined') {
+      if (
+        data.locationId !== currentPlan.locationId &&
+        !(await canAccessLocation(user, data.locationId))
+      ) {
+        return NextResponse.json(
+          { error: "Kein Zugriff auf den Ziel-Standort" },
+          { status: 403 }
+        );
+      }
       updateData.locationId = data.locationId;
     }
 
@@ -118,7 +128,7 @@ export async function PUT(
           field: key,  // ÄNDERUNG: von 'fieldName' zu 'field'
           oldValue: String(currentValue || ""),
           newValue: String(newValue || ""),
-          changedById: session.user.id
+          changedById: user.id
         });
       }
     }
@@ -130,7 +140,7 @@ export async function PUT(
         where: { id: params.id },
         data: {
           ...updateData,
-          updatedById: session.user.id,
+          updatedById: user.id,
         },
         include: {
           location: true,
@@ -168,17 +178,10 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // Session holen!
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
-  }
-
   try {
-    const user = await getUserFromRequest(request as NextRequest);
+    const user = await getSessionUser();
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -195,13 +198,11 @@ export async function PATCH(
       createdById,
       updatedById,
       locationId,
+      deletedAt,
+      deletedById,
       veröffentlichungsdatum,
       ...updateData
     } = body;
-    // locationId explizit übernehmen, falls im Request enthalten
-    if (typeof body.locationId !== 'undefined') {
-      updateData.locationId = body.locationId;
-    }
 
     // Hole den aktuellen Stand für History-Vergleich
     const currentPlan = await prisma.inputPlan.findUnique({
@@ -213,6 +214,28 @@ export async function PATCH(
         { error: "Input Plan nicht gefunden" },
         { status: 404 }
       );
+    }
+
+    if (!(await canAccessLocation(user, currentPlan.locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
+      );
+    }
+
+    // locationId explizit übernehmen, falls im Request enthalten —
+    // aber nur in Standorte, auf die der User Zugriff hat
+    if (typeof body.locationId !== 'undefined') {
+      if (
+        body.locationId !== currentPlan.locationId &&
+        !(await canAccessLocation(user, body.locationId))
+      ) {
+        return NextResponse.json(
+          { error: "Kein Zugriff auf den Ziel-Standort" },
+          { status: 403 }
+        );
+      }
+      updateData.locationId = body.locationId;
     }
 
     // History-Einträge erzeugen
@@ -229,7 +252,7 @@ export async function PATCH(
           field: key,
           oldValue: String(currentValue ?? ""),
           newValue: String(newValue ?? ""),
-          changedById: session.user.id
+          changedById: user.id
         });
       }
     }
@@ -240,7 +263,7 @@ export async function PATCH(
         where: { id: params.id },
         data: {
           ...updateData,
-          updatedById: session.user.id,
+          updatedById: user.id,
         }
       });
 
@@ -272,9 +295,28 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await getUserFromRequest(request);
+    const user = await getSessionUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const currentPlan = await prisma.inputPlan.findUnique({
+      where: { id: params.id },
+      select: { locationId: true },
+    });
+
+    if (!currentPlan) {
+      return NextResponse.json(
+        { error: "Input Plan nicht gefunden" },
+        { status: 404 }
+      );
+    }
+
+    if (!(await canAccessLocation(user, currentPlan.locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
+      );
     }
 
     // Soft delete

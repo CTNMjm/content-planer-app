@@ -1,5 +1,34 @@
 # Dev-Log — content-planer-app
 
+## 2026-08-11 (Teil 2) — Location-Permissions serverseitig durchgesetzt
+
+### Ausgangslage
+Nachaudit der Autorisierung ergab: **Keine einzige API-Route prüfte Location-Permissions.** Das Datenmodell (`UserLocation` pro User+Standort) war vollständig vorhanden, wurde aber serverseitig nirgends zur Zugriffskontrolle benutzt. Zusätzlich war `GET /api/inputplan` **komplett ohne Auth** erreichbar (Middleware schützt keine `/api/*`-Pfade).
+
+### Umsetzung
+- **Neuer zentraler Helper `src/lib/location-access.ts`**: `getSessionUser()`, `getAllowedLocationIds()` (liest `UserLocation` aus der DB, globaler `ADMIN` sieht alles), `canAccessLocation()`, `locationScope()` für Prisma-where. Die alte, defekte und ungenutzte `src/lib/auth-helpers.ts` (las nie befüllte Session-Relationen, falscher Feldname) wurde gelöscht.
+- **Kritisch behoben:** `GET /api/inputplan` verlangt jetzt Session + Location-Scope (war öffentlich, gab alle Pläne aller Standorte zurück).
+- **Listen-Routen gescopt:** `content-plans` GET, `inputplan` GET, `redakplan` GET, `locations` GET (nur noch zugewiesene aktive Standorte; vorher alle; außerdem 401 statt `200 []` ohne Session).
+- **Objekt-Routen geprüft:** `content-plans/[id]` GET/PUT/DELETE, `inputplan/[id]` GET/PUT/PATCH/DELETE, `redakplan/[id]` GET/PUT/DELETE, alle drei `history`-Routen, `automate`, `copy-to-redak`, `copy-to-input`, `contentplan/export` + `import` — jeweils: Objekt-Location gegen `UserLocation` geprüft (403), bei Verschieben zusätzlich Ziel-`locationId` validiert.
+- **Mass-Assignment eingedämmt:** `POST /api/inputplan` und PUT/PATCH strippen jetzt `id`/`createdAt`/`deletedAt`/`deletedById`/`createdById`/`updatedById`; CSV-Import nur noch mit Feld-Whitelist.
+- **Login:** `isActive` wird jetzt in `authorize()` geprüft — deaktivierte User können sich nicht mehr einloggen (wirkte vorher gar nicht).
+- **Nebenbei:** doppelte `new PrismaClient()`-Instanz in `copy-to-redak` entfernt (nutzt `@/lib/prisma`), Debug-Logging (Header/Cookies/Bodies) aus den Routen entfernt.
+
+### Verhaltensänderungen (beabsichtigt, aber sichtbar)
+1. **`GET /api/redakplan`** zeigt jetzt alle Pläne der eigenen Standorte statt nur selbst erstellte (`createdById`-Filter ersetzt — Kollegen am selben Standort sahen vorher nichts, per ID-Zugriff aber doch alles; jetzt konsistent Location-basiert).
+2. **User ohne `UserLocation`-Zuweisung (und ohne globale `ADMIN`-Rolle) sehen keine Standorte/Pläne mehr.** Vor dem Produktiv-Deployment prüfen, dass alle aktiven User Standort-Zuweisungen haben.
+3. Das granulare `Permission`-/`UserLocationRole`-Modell (z. B. `content.approve`) wird weiterhin nur client-seitig für die UI benutzt — serverseitig wird auf Standort-Ebene autorisiert. Feingranulare Aktions-Rechte serverseitig durchzusetzen bleibt offen.
+
+### Verifikation
+`tsc --noEmit` 0 Fehler · `next lint` 0 Fehler / 5 bekannte Warnungen · Produktions-Build OK · Smoke-Test erweitert (`scripts/smoke-test.sh`): alle Plan-/Location-APIs ohne Login → 401, Export → 307 via Middleware, Rest wie gehabt grün.
+
+### Offene Punkte (aktualisiert)
+1. Next.js 15/16 + React 19 Upgrade (5 Rest-Advisories).
+2. Tests (Vitest + Playwright) und CI.
+3. `NEXTAUTH_SECRET` für Produktion rotieren; Secrets ins Deployment-Secret-Management.
+4. ESLint-Warnungen (useEffect-Deps) beheben.
+5. Feingranulare Permissions (`content.approve` etc.) serverseitig durchsetzen; JWT-Rolle wird 7 Tage gecacht (Rollenentzug greift verzögert).
+
 ## 2026-08-11 — Technisches Audit, Security-Check & Modernisierung
 
 ### Ausgangslage

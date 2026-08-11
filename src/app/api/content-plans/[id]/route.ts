@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/authOptions";
 import { prisma } from "@/lib/prisma";
+import { getSessionUser, canAccessLocation } from "@/lib/location-access";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json(
         { error: "Nicht authentifiziert" },
         { status: 401 }
@@ -31,6 +29,13 @@ export async function GET(
       );
     }
 
+    if (!(await canAccessLocation(user, contentPlan.locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(contentPlan);
   } catch (error) {
     console.error("Error fetching content plan:", error);
@@ -46,9 +51,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json(
         { error: "Nicht authentifiziert" },
         { status: 401 }
@@ -56,7 +60,6 @@ export async function PUT(
     }
 
     const body = await request.json();
-    console.log('API-DEBUG: body.status:', body.status, 'body:', body);
     const validStatuses = ['DRAFT', 'IN_PROGRESS', 'REVIEW', 'APPROVED', 'COMPLETED'];
 
     // Hole den aktuellen Plan für Vergleiche
@@ -71,11 +74,27 @@ export async function PUT(
       return NextResponse.json({ error: "Plan nicht gefunden" }, { status: 404 });
     }
 
+    if (!(await canAccessLocation(user, currentPlan.locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
+      );
+    }
+
+    // Ziel-Standort validieren (Plan darf nur in erlaubte Standorte verschoben werden)
+    if (body.locationId && body.locationId !== currentPlan.locationId) {
+      if (!(await canAccessLocation(user, body.locationId))) {
+        return NextResponse.json(
+          { error: "Kein Zugriff auf den Ziel-Standort" },
+          { status: 403 }
+        );
+      }
+    }
+
     // Validiere den Status
     const status = body.status && validStatuses.includes(body.status)
       ? body.status
       : 'DRAFT';
-    console.log('API-DEBUG: verwendeter Status für Update:', status);
 
     const updateData = {
       monat: body.monat,
@@ -147,14 +166,13 @@ export async function PUT(
           fieldName: field === 'locationId' ? 'Standort' : field,
           oldValue: String(oldValue || ''),
           newValue: String(newValue || ''),
-          changedById: session.user.id,
+          changedById: user.id,
         });
       }
     }
 
     // Speichere alle Historie-Einträge
     if (historyEntries.length > 0) {
-      console.log('API-DEBUG: Erstelle Historie-Einträge:', historyEntries);
       await prisma.contentPlanHistory.createMany({
         data: historyEntries,
       });
@@ -175,12 +193,30 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json(
         { error: "Nicht authentifiziert" },
         { status: 401 }
+      );
+    }
+
+    const contentPlan = await prisma.contentPlan.findUnique({
+      where: { id: params.id },
+      select: { locationId: true },
+    });
+
+    if (!contentPlan) {
+      return NextResponse.json(
+        { error: "Content-Plan nicht gefunden" },
+        { status: 404 }
+      );
+    }
+
+    if (!(await canAccessLocation(user, contentPlan.locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
       );
     }
 

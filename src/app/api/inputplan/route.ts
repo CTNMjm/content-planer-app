@@ -1,42 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/authOptions";
-import { prisma } from "@/lib/prisma"; // ggf. anpassen
+import { prisma } from "@/lib/prisma";
+import {
+  getSessionUser,
+  getAllowedLocationIds,
+  canAccessLocation,
+  locationScope,
+} from "@/lib/location-access";
 
 export async function POST(req: NextRequest) {
-  // HIER: Debug-Logging hinzufügen
-  console.log("=== InputPlan POST Request ===");
-  console.log("Headers:", Object.fromEntries(req.headers.entries()));
-  console.log("Cookies:", req.cookies.getAll());
-  
   try {
-    const session = await getServerSession(authOptions);
-    console.log("Session:", session ? "Found" : "Not found");
-    console.log("User ID:", session?.user?.id);
-    console.log("Full session:", JSON.stringify(session, null, 2));
-    
-    if (!session?.user?.id) {
-      console.error("No session found - returning 401");
-      return NextResponse.json(
-        { error: "Nicht autorisiert" },
-        { status: 401 }
-      );
+    const user = await getSessionUser();
+    if (!user) {
+      return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
     }
 
     const data = await req.json();
-    console.log("Request data:", data);
-    
-    // Füge die userId aus der Session hinzu
-    const inputPlanData = {
-      ...data,
-      createdById: session.user.id,
-      updatedById: session.user.id,
-    };
 
-    console.log("Creating InputPlan with data:", inputPlanData);
+    // Audit-/System-Felder dürfen nicht vom Client gesetzt werden
+    const {
+      id: _id,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      deletedAt: _deletedAt,
+      deletedById: _deletedById,
+      createdById: _createdById,
+      updatedById: _updatedById,
+      ...planData
+    } = data;
+
+    if (!(await canAccessLocation(user, planData.locationId))) {
+      return NextResponse.json(
+        { error: "Kein Zugriff auf diesen Standort" },
+        { status: 403 }
+      );
+    }
 
     const inputPlan = await prisma.inputPlan.create({
-      data: inputPlanData,
+      data: {
+        ...planData,
+        createdById: user.id,
+        updatedById: user.id,
+      },
       include: {
         location: true,
         createdBy: true,
@@ -46,20 +50,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(inputPlan);
   } catch (error) {
     console.error("Error in POST /api/inputplan:", error);
-    
-    // Detailliertere Fehlerausgabe
+
     if (error instanceof Error) {
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-      
-      // Prisma-spezifische Fehler
       if (error.message.includes("Foreign key constraint")) {
         return NextResponse.json(
           { error: "Ungültige Referenz (z.B. Location ID)" },
           { status: 400 }
         );
       }
-      
+
       if (error.message.includes("Unique constraint")) {
         return NextResponse.json(
           { error: "Dieser Eintrag existiert bereits" },
@@ -67,12 +66,9 @@ export async function POST(req: NextRequest) {
         );
       }
     }
-    
+
     return NextResponse.json(
-      { 
-        error: "Fehler beim Erstellen des Input-Plans",
-        details: error instanceof Error ? error.message : "Unbekannter Fehler"
-      },
+      { error: "Fehler beim Erstellen des Input-Plans" },
       { status: 500 }
     );
   }
@@ -80,16 +76,23 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   try {
+    const user = await getSessionUser();
+    if (!user) {
+      return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
+    }
+
+    const allowed = await getAllowedLocationIds(user);
     const inputPlans = await prisma.inputPlan.findMany({
+      where: { ...locationScope(allowed) },
       include: { location: true },
       orderBy: { updatedAt: "desc" },
     });
     return NextResponse.json(inputPlans);
   } catch (error) {
+    console.error("Error in GET /api/inputplan:", error);
     return NextResponse.json(
       { error: "Fehler beim Laden der Input-Pläne" },
       { status: 500 }
     );
   }
 }
-
