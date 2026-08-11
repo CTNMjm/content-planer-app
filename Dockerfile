@@ -1,13 +1,18 @@
-# Development Dockerfile for Next.js
-FROM node:20
+# Produktions-Image
+FROM node:22-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+RUN apk add --no-cache openssl
+
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
+RUN npm ci
 
 COPY . .
+RUN npm run build
 
+ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start"]

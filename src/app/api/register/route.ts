@@ -16,6 +16,15 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  // Selbstregistrierung ist standardmaessig deaktiviert; Nutzer werden von Admins angelegt.
+  // Zum Aktivieren ALLOW_REGISTRATION=true in der Umgebung setzen.
+  if (process.env.ALLOW_REGISTRATION !== "true") {
+    return new Response(
+      JSON.stringify({ error: "Registrierung ist deaktiviert. Bitte wende dich an einen Administrator." }),
+      { status: 403, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   // Rate limiting
   const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1";
   const { isRateLimited } = limiter.check(ip, 5); // 5 requests per minute
