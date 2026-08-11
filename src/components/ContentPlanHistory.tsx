@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
@@ -33,31 +33,15 @@ export function ContentPlanHistory({
   contentPlanId,
   contentPlanTitle,
 }: ContentPlanHistoryProps) {
-  console.log("ContentPlanHistory rendered:", { isOpen, contentPlanId, contentPlanTitle });
-  
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    console.log("useEffect triggered:", { isOpen, contentPlanId });
-    if (isOpen && contentPlanId) {
-      fetchHistory();
-    }
-  }, [isOpen, contentPlanId]);
-
-  const fetchHistory = async () => {
-    console.log("fetchHistory called for ID:", contentPlanId);
+  const fetchHistory = useCallback(async () => {
     setLoading(true);
     try {
-      const url = `/api/content-plans/${contentPlanId}/history`;
-      console.log("Fetching from URL:", url);
-      
-      const response = await fetch(url);
-      console.log("Response status:", response.status);
-      
+      const response = await fetch(`/api/content-plans/${contentPlanId}/history`);
       if (response.ok) {
         const data = await response.json();
-        console.log("History data received:", data);
         setHistory(data);
       } else {
         console.error("Response not ok:", response.status, response.statusText);
@@ -67,7 +51,13 @@ export function ContentPlanHistory({
     } finally {
       setLoading(false);
     }
-  };
+  }, [contentPlanId]);
+
+  useEffect(() => {
+    if (isOpen && contentPlanId) {
+      fetchHistory();
+    }
+  }, [isOpen, contentPlanId, fetchHistory]);
 
   const getActionLabel = (action: string) => {
     const labels: { [key: string]: string } = {

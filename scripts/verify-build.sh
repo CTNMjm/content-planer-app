@@ -12,6 +12,10 @@ echo "=== next lint ==="
 npx next lint
 echo "lint exit: $?"
 
+echo "=== vitest ==="
+npm test
+echo "test exit: $?"
+
 echo "=== next build ==="
 npm run build
 echo "build exit: $?"

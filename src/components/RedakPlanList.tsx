@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RedakPlanModal } from "@/components/RedakPlanModal";
@@ -53,15 +53,10 @@ export default function RedakPlanList() {
   const [showHistory, setShowHistory] = useState(false);
   const [historyPlanId, setHistoryPlanId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchRedakPlans();
-    fetchLocations();
-  }, []);
-
-  const fetchRedakPlans = async () => {
+  const fetchRedakPlans = useCallback(async () => {
     try {
       const response = await fetch("/api/redakplan");
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           router.push("/login");
@@ -69,7 +64,7 @@ export default function RedakPlanList() {
         }
         throw new Error("Fehler beim Laden der Daten");
       }
-      
+
       const data = await response.json();
       setRedakPlans(data);
     } catch (error) {
@@ -78,9 +73,9 @@ export default function RedakPlanList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     try {
       const response = await fetch("/api/locations");
       if (response.ok) {
@@ -90,7 +85,12 @@ export default function RedakPlanList() {
     } catch (error) {
       console.error("Error fetching locations:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRedakPlans();
+    fetchLocations();
+  }, [fetchRedakPlans, fetchLocations]);
 
   const handleSaveRedakPlan = async (plan: Omit<RedakPlan, 'location' | 'inputPlan' | 'createdAt' | 'updatedAt'>) => {
     try {

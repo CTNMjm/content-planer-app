@@ -1,5 +1,30 @@
 # Dev-Log — content-planer-app
 
+## 2026-08-11 (Teil 3) — Tests, CI und ESLint-Warnungen
+
+### Tests (Vitest)
+- **Vitest** als Dev-Dependency eingerichtet (`vitest.config.mts`, `@`-Alias auf `src/`, Node-Environment). Scripts: `npm test` (einmalig) / `npm run test:watch`.
+- **22 Tests in `tests/`**, Fokus auf die frisch eingebaute Autorisierung:
+  - `location-access.test.ts`: `getSessionUser`, `getAllowedLocationIds` (Admin-Bypass, leere Zuweisungen), `canAccessLocation` (Zuweisung/fremd/leere ID), `locationScope`.
+  - `api-authorization.test.ts`: Route-Handler direkt aufgerufen (Prisma + next-auth gemockt) — `GET /api/inputplan` 401/Scoping/Admin, `GET|DELETE /api/content-plans/[id]` 401/403/404 und Erfolgsfälle inkl. „DELETE fremder Standort löscht nicht".
+- Playwright-E2E bewusst noch nicht — braucht DB-Seeding + Browser-Setup, als eigener Schritt sinnvoller.
+
+### CI (GitHub Actions)
+- `.github/workflows/ci.yml`: Push auf `main` + Pull Requests → Node 22, `npm ci`, `tsc --noEmit`, `next lint`, `vitest run`, `next build` (mit Dummy-`DATABASE_URL`/`NEXTAUTH_SECRET`, es wird keine DB verbunden).
+
+### ESLint
+- Alle 4 verbliebenen `react-hooks/exhaustive-deps`-Warnungen behoben (`ContentPlanHistory`, `ContentPlanModal`, `InputPlanHistory`, `RedakPlanList`): Fetch-Funktionen in `useCallback` gehoben und in die Dependency-Arrays aufgenommen; dabei Debug-`console.log`s entfernt. In `ContentPlanModal` setzte `fetchLocations` die Standard-`locationId` doppelt (macht bereits der `locationsState`-Effect) → Duplikat entfernt.
+- `next lint`: **0 Fehler, 0 Warnungen**.
+
+### Verifikation
+`tsc --noEmit` 0 Fehler · `next lint` sauber · 22/22 Tests grün · Produktions-Build OK · Smoke-Test komplett grün (inkl. 401-Checks).
+
+### Offene Punkte (aktualisiert)
+1. Next.js 15/16 + React 19 Upgrade (5 Rest-Advisories).
+2. Playwright-E2E-Tests (Login-Flow, Plan-Lebenszyklus) auf Basis einer Seed-DB.
+3. `NEXTAUTH_SECRET` für Produktion rotieren; Secrets ins Deployment-Secret-Management.
+4. Feingranulare Permissions (`content.approve` etc.) serverseitig durchsetzen; JWT-Rolle wird 7 Tage gecacht.
+
 ## 2026-08-11 (Teil 2) — Location-Permissions serverseitig durchgesetzt
 
 ### Ausgangslage

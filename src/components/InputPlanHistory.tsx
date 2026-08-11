@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface InputPlanHistoryEntry {
   id: string;
@@ -33,30 +33,30 @@ export default function InputPlanHistory({ inputPlanId, isOpen, onClose }: Input
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && inputPlanId) {
-      fetchHistory();
-    }
-  }, [isOpen, inputPlanId]);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/inputplan/${inputPlanId}/history`);
-      
+
       if (!response.ok) {
         throw new Error("Fehler beim Laden der Historie");
       }
-      
+
       const data = await response.json();
-      
+
       setHistory(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unbekannter Fehler");
     } finally {
       setLoading(false);
     }
-  };
+  }, [inputPlanId]);
+
+  useEffect(() => {
+    if (isOpen && inputPlanId) {
+      fetchHistory();
+    }
+  }, [isOpen, inputPlanId, fetchHistory]);
 
   const getFieldDisplayName = (field: string): string => {
     const fieldMap: { [key: string]: string } = {

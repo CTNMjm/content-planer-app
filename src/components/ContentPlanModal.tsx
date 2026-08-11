@@ -1,7 +1,7 @@
 // filepath: \\wsl.localhost\Ubuntu-24\home\johann\content-planer-app\src\components\ContentPlanModal.tsx
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { useSession } from "next-auth/react";
 
@@ -110,10 +110,6 @@ export function ContentPlanModal({
   }, [session, formData.locationId]);
 
   useEffect(() => {
-    fetchLocations();
-  }, []);
-
-  useEffect(() => {
     if (contentPlan && locationsState.length > 0) {
       setFormData({
         ...formData,
@@ -168,24 +164,20 @@ export function ContentPlanModal({
     }
   };
 
-  const fetchLocations = async () => {
+  // Die Vorbelegung der locationId übernimmt der useEffect auf locationsState
+  const fetchLocations = useCallback(async () => {
     setLocationsLoading(true);
     try {
       const response = await fetch("/api/locations");
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      console.log('Loaded locations:', data); // DEBUG
-      
+
       if (Array.isArray(data)) {
         setLocationsState(data);
-        
-        if (!contentPlan && data.length > 0) {
-          setFormData(prev => ({ ...prev, locationId: data[0].id }));
-        }
       }
     } catch (error) {
       console.error("Error fetching locations:", error);
@@ -193,7 +185,11 @@ export function ContentPlanModal({
     } finally {
       setLocationsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLocations();
+  }, [fetchLocations]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
