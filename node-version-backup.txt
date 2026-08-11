@@ -1,2 +1,0 @@
-Node.js Version: v20.19.2
-NPM Version: 10.8.2

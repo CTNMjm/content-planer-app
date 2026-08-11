@@ -1,36 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import jwt from "jsonwebtoken";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/authOptions";
 
-// Hilfsfunktion zum Extrahieren des Users aus dem Token oder Session
+// Hilfsfunktion zum Extrahieren des Users aus der Session
 async function getUserFromRequest(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (session?.user?.id) {
-      const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { id: true, email: true, name: true },
-      });
-      if (user) return user;
-    }
-
-    const token = request.cookies.get("token")?.value;
-    if (!token && process.env.NODE_ENV === "development") {
-      const devUser = await prisma.user.findFirst({
-        select: { id: true, email: true, name: true },
-      });
-      if (devUser) return devUser;
-    }
-    if (!token) return null;
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+    if (!session?.user?.id) return null;
+    return await prisma.user.findUnique({
+      where: { id: session.user.id },
       select: { id: true, email: true, name: true },
     });
-    return user;
   } catch {
     return null;
   }

@@ -3,56 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
 type ActionType = "CREATE" | "UPDATE" | "DELETE";
-import jwt from "jsonwebtoken";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/authOptions";
 
-// Hilfsfunktion zum Extrahieren des Users aus dem Token
+// Hilfsfunktion zum Extrahieren des Users aus der Session
 async function getUserFromRequest(request: NextRequest) {
   try {
-    // Erst NextAuth-Session prüfen
     const session = await getServerSession(authOptions);
-    console.log("=== USER DEBUG ===");
-    console.log("Session found:", !!session);
-    console.log("Session user:", session?.user);
-    
-    if (session?.user?.id) {
-      const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { id: true, email: true, name: true }
-      });
-      console.log("User from DB:", user);
-      if (user) return user;
-    }
-
-    // Fallback: JWT-Token prüfen
-    const token = request.cookies.get("token")?.value;
-    console.log("JWT Token found:", !!token);
-    
-    // TEMPORÄR für Entwicklung - später entfernen!
-    if (!token && process.env.NODE_ENV === "development") {
-      console.log("No token found, using development user");
-      const devUser = await prisma.user.findFirst({
-        select: { id: true, email: true, name: true }
-      });
-      if (devUser) {
-        console.log("Development user found:", devUser);
-        return devUser;
-      }
-    }
-    
-    if (!token) {
-      console.log("No token found and no dev user");
-      return null;
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+    if (!session?.user?.id) return null;
+    return await prisma.user.findUnique({
+      where: { id: session.user.id },
       select: { id: true, email: true, name: true }
     });
-    
-    return user;
   } catch (error) {
     console.error("getUserFromRequest error:", error);
     return null;
