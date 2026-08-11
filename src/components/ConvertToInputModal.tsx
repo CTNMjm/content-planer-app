@@ -356,7 +356,7 @@ const ConvertToInputModal: React.FC<ConvertToInputModalProps> = ({
 
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
               <p className="text-sm text-blue-800">
-                <strong>Hinweis:</strong> Dieser Content-Plan wird als neuer Input-Plan mit Status "Entwurf" erstellt.
+                <strong>Hinweis:</strong> Dieser Content-Plan wird als neuer Input-Plan mit Status &quot;Entwurf&quot; erstellt.
               </p>
             </div>
           </>

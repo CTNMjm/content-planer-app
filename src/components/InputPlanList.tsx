@@ -399,7 +399,7 @@ export default function InputPlanList({
               )}
               {searchTerm && (
                 <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
-                  Suche: "{searchTerm}"
+                  Suche: &quot;{searchTerm}&quot;
                 </span>
               )}
               <button

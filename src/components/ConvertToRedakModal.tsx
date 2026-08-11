@@ -183,7 +183,7 @@ export default function ConvertToRedakModal({
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
               <p className="text-sm text-blue-800">
-                <strong>Hinweis:</strong> Dieser Input-Plan wird als neuer Redak-Plan mit Status "In Bearbeitung" erstellt.
+                <strong>Hinweis:</strong> Dieser Input-Plan wird als neuer Redak-Plan mit Status &quot;In Bearbeitung&quot; erstellt.
               </p>
             </div>
           </>
