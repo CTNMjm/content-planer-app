@@ -1,5 +1,22 @@
 # Dev-Log — content-planer-app
 
+## 2026-08-12 (Teil 2) — Lokale Audit- & Lasttests gegen den Next-16-Build
+
+Vor dem Push/Deployment: Produktions-Build (`next start`) gegen eine frische Docker-Postgres (Port 5433, damit die vielen anderen lokalen DB-Container auf 5432 unberührt bleiben) mit Seed-Daten getestet — 2 Standorte (Berlin/Hamburg), Admin + je 1 standortgebundener User + 1 deaktivierter User, je 1 ContentPlan/InputPlan/RedakPlan pro Standort.
+
+### Autorisierungs-Audit (echte Logins via NextAuth-Credentials) — 27/27 PASS
+- **Login/Session:** Berlin-, Hamburg-, Admin-Login je erfolgreich; **deaktivierter User (`isActive=false`) wird abgewiesen** (keine Session).
+- **Location-Scoping der Listen:** Berlin-User sieht in `content-plans`/`inputplan`/`redakplan`/`locations` jeweils genau 1 Eintrag (nur Berlin); Admin sieht überall 2.
+- **IDOR (Berlin-User → Hamburg-Objekte) = 403** für GET ContentPlan/InputPlan/RedakPlan, alle drei History-Routen, DELETE ContentPlan und CSV-Export mit fremder `locationId`.
+- **Positiv:** eigener Standort → 200 (inkl. Export); **Admin** → 200 auf beide Standorte.
+- **Anonym → 401** auf die API-Listen.
+
+### Lasttest (Node-Bordmittel, Produktions-Build)
+- **30 gleichzeitig, 5s/Endpunkt:** 0 Fehler. Login-Seite ~2.700 req/s (p95 18ms); DB-Endpunkte ~1.000–1.400 req/s (p50 ~25ms, p99 ~40ms).
+- **100 gleichzeitig, 8s/Endpunkt:** 0 Fehler, keine 500er/Abbrüche. DB-Endpunkte ~1.200–1.400 req/s, p50 ~77ms / p99 ~110ms — Latenz skaliert linear, kein Einbruch. Server-Log über ~150.000 Requests ohne eine einzige Fehler-/Warnzeile; danach weiterhin erreichbar.
+
+**Fazit:** Auth-Grenzen greifen unter realen Sessions wie beabsichtigt, der Next-16-Build ist stabil und performant. Testartefakte (Docker-Container, Test-Skripte, Seed) wurden nach dem Lauf wieder entfernt; das Einmal-Migrationsskript `scripts/next15-params.sh` (async-params) ist erledigt und gelöscht.
+
 ## 2026-08-12 — Upgrade auf Next.js 16 + React 19
 
 ### Versionen
