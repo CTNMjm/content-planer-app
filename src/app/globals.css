@@ -2,16 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* App ist durchgaengig hell gestaltet (keine dark:-Varianten in den Komponenten).
+   color-scheme: light erzwingt auch bei macOS-Dark-Mode das helle Rendering von
+   Formularelementen/Scrollbars; die feste Palette haelt Hintergrund/Text lesbar. */
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
