@@ -1,5 +1,20 @@
 # Dev-Log — content-planer-app
 
+## 2026-08-12 (Teil 3) — Deployment auf Coolify reparieren (Next-16-Build)
+
+Nach dem Push blieb `dev.cp-app.control-monitor.de` auf **HTTP 503**. Deployment läuft auf **Coolify** (Server 138.199.166.94, Build via nixpacks, Routing/TLS via Traefik) — **nicht** über GitHub Actions (`ci.yml` testet nur). Der zuletzt live gelaufene Container war ein uralter Stand (**Next 14.1.4**, noch mit `swcMinify:false`), d.h. Coolify hatte monatelang keinen neuen Build gezogen; Auto-Deploy per Git-Webhook ist zwar aktiv, aber jeder neue Build schlug fehl.
+
+### Zwei Build-Fehler, nacheinander behoben
+1. **`Cannot find module 'autoprefixer'`** — Coolify baut mit `NODE_ENV=production`, dadurch ließ `npm ci` die devDependencies weg (Coolify warnt explizit davor; `NPM_CONFIG_PRODUCTION=false` wird von npm 10 ignoriert). → **Fix:** `nixpacks.toml` Install-Cmd auf `npm ci --include=dev`. Lokal reproduziert/verifiziert. **Nötig, aber nicht hinreichend.**
+2. Nächster Build: gleicher `autoprefixer`-Fehler, obwohl jetzt installiert (595 statt 295 Pakete). Ursache war **nicht** mehr die Installation, sondern **Turbopack**: dessen PostCSS-Plugin-Auflösung scheitert in Coolifys containerisierter nixpacks-Umgebung. Der Turbopack-Produktions-Build (Default in Next 16) ist in Container-Builds generell instabil — in einem sauberen `node:22-bookworm`-Container reproduziert derselbe Build sogar einen **V8-Absturz** (`V8_Fatal` im Turbopack-Compiler, verwandt mit dem früher notierten WSL-SIGTRAP). → **Fix:** Build zurück auf **Webpack** (`next build --webpack`), die bis Next 14 genutzte, stabile Pipeline. Im `node:22`-Container verifiziert: Turbopack-Build crasht, `--webpack` baut grün.
+
+### Sicherheitsfund aus den Coolify-Logs
+Die Coolify-Build-Env enthält Secrets im Klartext (in Logs sichtbar): `NEXTAUTH_SECRET`, `DATABASE_URL`-Passwort, `ADMIN_RESET_TOKEN` → **rotieren**. `JWT_SECRET` und `ADMIN_IMPORT_SECRET` sind **obsolet** (zugehöriger Code/Routen beim Audit entfernt) → in Coolify **löschen**. Optional: `NODE_ENV` in Coolify auf „Runtime only" stellen (dann greift auch der `--include=dev`-Trigger nicht mehr).
+
+### Merke fürs Deployment
+- Build-Pipeline ist **Webpack**, nicht Turbopack (`package.json` build-Script). Nicht versehentlich zurückdrehen.
+- Coolify-Install nutzt `npm ci --include=dev` (nötig wegen `NODE_ENV=production` im Build).
+
 ## 2026-08-12 (Teil 2) — Lokale Audit- & Lasttests gegen den Next-16-Build
 
 Vor dem Push/Deployment: Produktions-Build (`next start`) gegen eine frische Docker-Postgres (Port 5433, damit die vielen anderen lokalen DB-Container auf 5432 unberührt bleiben) mit Seed-Daten getestet — 2 Standorte (Berlin/Hamburg), Admin + je 1 standortgebundener User + 1 deaktivierter User, je 1 ContentPlan/InputPlan/RedakPlan pro Standort.
