@@ -1,8 +1,11 @@
 [phases.setup]
 nixPkgs = ["nodejs_22"]
 
+# --include=dev erzwingt die devDependencies auch bei NODE_ENV=production
+# (Coolify setzt das zur Build-Zeit). Ohne sie fehlen autoprefixer/postcss/
+# tailwindcss/typescript und der next-build bricht ab.
 [phases.install]
-cmds = ["npm ci"]
+cmds = ["npm ci --include=dev"]
 
 [phases.build]
 cmds = ["npm run build"]
