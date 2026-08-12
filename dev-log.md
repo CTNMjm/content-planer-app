@@ -1,5 +1,35 @@
 # Dev-Log — content-planer-app
 
+## 2026-08-12 — Upgrade auf Next.js 16 + React 19
+
+### Versionen
+- **next 14.2.35 → 16.3.0** (Build jetzt via Turbopack), **react/react-dom 18.2 → 19.2.8**, **next-auth 4.24.7 → 4.24.15** (unterstützt Next 16 offiziell).
+- Mitgezogen wegen React-19-Peer-Deps: **@headlessui/react 1.7 → 2.x** (Dialog/Transition-API abwärtskompatibel, keine Codeänderung nötig), **lucide-react 0.344 → aktuell**, @types/react[-dom] 19, @types/node 22, **eslint 8 → 9** + eslint-config-next 16.
+- Zunächst war Next 15.5 geplant — dort bleiben aber gebündelte `postcss`/`sharp`-Advisories offen, erst 16.3.0 ist sauber. **`npm audit`: 0 Schwachstellen** (vorher 5 hoch).
+
+### Breaking Changes umgesetzt
+1. **Async `params`** in Route-Handlern: alle 22 dynamischen Handler auf `context: { params: Promise<…> }` + `await context.params` umgestellt (Skript `scripts/next15-params.sh`); Tests entsprechend auf `Promise.resolve(…)` angepasst.
+2. **`middleware.ts` → `proxy.ts`**: Konvention in Next 16 umbenannt. Zusätzlich brach der bisherige Re-Export (`export { default } from "next-auth/middleware"`) unter Turbopack ("must export a function") → jetzt expliziter `withAuth({})`-Export in `src/proxy.ts`, Matcher unverändert.
+3. **`next lint` entfernt** → per offiziellem Codemod auf ESLint-9-CLI migriert: `eslint.config.mjs` (Flat Config mit `eslint-config-next/core-web-vitals`), `.eslintrc.json` gelöscht, Script `lint: "eslint ."`. CI ruft weiterhin `npm run lint` auf.
+4. `tsconfig.json` von Next automatisch angepasst (`jsx: react-jsx`, Include für `.next/dev/types`).
+
+### Neue Lint-Regeln (react-hooks v6)
+eslint-plugin-react-hooks v6 meldet 33 Verstöße in Bestandskomponenten (`set-state-in-effect`, `immutability` = Zugriff vor Deklaration, `static-components` = Pagination-Komponenten im Render). **Vorerst auf `warn` gestuft** (`eslint.config.mjs`) — das sind reale, aber nicht neue Qualitätsprobleme; Refactoring als eigener Schritt.
+
+### Verifikation
+`tsc --noEmit` 0 Fehler · ESLint 0 Fehler / 33 Warnungen (s. o.) · 22/22 Vitest-Tests grün · Produktions-Build OK (Turbopack, deutlich schneller: Compile <1s statt ~30s) · Smoke-Test komplett grün (CSS-Check an Turbopack-Pfade `/_next/static/chunks/*.css` angepasst).
+
+### Fürs Deployment beachten
+- Node ≥ 20.9 nötig — Docker/nixpacks stehen bereits auf Node 22, kein Handlungsbedarf.
+- `middleware.ts` existiert nicht mehr; falls Deployment-Skripte darauf verweisen: heißt jetzt `src/proxy.ts`.
+
+### Offene Punkte (aktualisiert)
+1. 33 react-hooks-Warnungen refactoren (setState-in-Effect-Muster, Pagination-Komponenten aus dem Render ziehen).
+2. Playwright-E2E-Tests auf Basis einer Seed-DB.
+3. `NEXTAUTH_SECRET` für Produktion rotieren; Secrets ins Deployment-Secret-Management.
+4. Feingranulare Permissions (`content.approve` etc.) serverseitig durchsetzen.
+5. Prisma 6.11 → 6.19 (Minor-Update, unkritisch).
+
 ## 2026-08-11 (Teil 3) — Tests, CI und ESLint-Warnungen
 
 ### Tests (Vitest)

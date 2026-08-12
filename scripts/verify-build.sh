@@ -8,8 +8,8 @@ echo "=== tsc --noEmit ==="
 npx tsc --noEmit
 echo "tsc exit: $?"
 
-echo "=== next lint ==="
-npx next lint
+echo "=== eslint ==="
+npm run lint
 echo "lint exit: $?"
 
 echo "=== vitest ==="

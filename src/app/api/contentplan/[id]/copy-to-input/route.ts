@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser, canAccessLocation } from "@/lib/location-access";
 
 // POST: Kopiert einen ContentPlan nach InputPlan
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const user = await getSessionUser();
   if (!user) {
     return new Response(JSON.stringify({ error: "Nicht eingeloggt" }), { status: 401 });

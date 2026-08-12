@@ -81,7 +81,7 @@ describe("GET /api/inputplan", () => {
 
 describe("GET /api/content-plans/[id]", () => {
   const req = new NextRequest("http://localhost/api/content-plans/plan-1");
-  const params = { params: { id: "plan-1" } };
+  const params = { params: Promise.resolve({ id: "plan-1" }) };
 
   it("liefert 401 ohne Session", async () => {
     loginAs(null);
@@ -121,7 +121,7 @@ describe("DELETE /api/content-plans/[id]", () => {
   const req = new NextRequest("http://localhost/api/content-plans/plan-1", {
     method: "DELETE",
   });
-  const params = { params: { id: "plan-1" } };
+  const params = { params: Promise.resolve({ id: "plan-1" }) };
 
   it("löscht nicht ohne Standort-Zuweisung (403)", async () => {
     loginAs({ id: "user-1", role: "USER" });

@@ -6,8 +6,8 @@ sleep 7
 echo "--- /login status:"
 curl -s -o /tmp/login.html -w "%{http_code}\n" http://localhost:3100/login
 echo "--- css files referenziert:"
-grep -o '/_next/static/css/[a-z0-9]*\.css' /tmp/login.html | sort -u
-CSS=$(grep -o '/_next/static/css/[a-z0-9]*\.css' /tmp/login.html | head -1)
+grep -o '/_next/static/[a-z]*/[a-zA-Z0-9._-]*\.css' /tmp/login.html | sort -u
+CSS=$(grep -o '/_next/static/[a-z]*/[a-zA-Z0-9._-]*\.css' /tmp/login.html | head -1)
 echo "--- tailwind utility in css (erwartet >=1):"
 curl -s "http://localhost:3100$CSS" | grep -c 'flex{display:flex}'
 echo "--- cdn script noch da? (erwartet 0):"
