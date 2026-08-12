@@ -311,7 +311,7 @@ export default function InputPlanList({
       {/* Überschrift wenn abgeschlossene angezeigt werden */}
       {showCompleted && (
         <div className="mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
             Abgeschlossene Input-Pläne
           </h2>
         </div>
@@ -321,13 +321,13 @@ export default function InputPlanList({
       <div className="mb-6 space-y-4">
         <div className="flex flex-wrap gap-4">
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Standort Filter
             </label>
             <select
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="all">Alle Standorte</option>
               {locations.map((location) => (
@@ -339,13 +339,13 @@ export default function InputPlanList({
           </div>
 
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Sortierung
             </label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="monat">Sortieren nach Monat</option>
               <option value="status">Sortieren nach Status</option>
@@ -357,7 +357,7 @@ export default function InputPlanList({
           <div className="flex items-end gap-2">
             <button
               onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
               {sortOrder === "asc" ? "↑ Aufsteigend" : "↓ Absteigend"}
             </button>
@@ -372,7 +372,7 @@ export default function InputPlanList({
               className={`px-4 py-2 rounded-md ${
                 viewMode === "list"
                   ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
               }`}
             >
               Liste
@@ -382,7 +382,7 @@ export default function InputPlanList({
               className={`px-4 py-2 rounded-md ${
                 viewMode === "kanban"
                   ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
               }`}
             >
               Kanban
@@ -393,18 +393,18 @@ export default function InputPlanList({
           {(locationFilter !== "all" || searchTerm) && (
             <div className="flex items-center gap-2">
               {locationFilter !== "all" && (
-                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
+                <span className="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 rounded text-sm">
                   Standort: {locations.find(l => l.id === locationFilter)?.name}
                 </span>
               )}
               {searchTerm && (
-                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
+                <span className="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 rounded text-sm">
                   Suche: &quot;{searchTerm}&quot;
                 </span>
               )}
               <button
                 onClick={() => setLocationFilter("all")}
-                className="text-blue-600 hover:text-blue-800 underline text-sm"
+                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 underline text-sm"
               >
                 Filter zurücksetzen
               </button>
@@ -415,35 +415,35 @@ export default function InputPlanList({
 
       {filteredAndSortedPlans.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500">Keine Input-Pläne gefunden</p>
+          <p className="text-gray-500 dark:text-gray-400">Keine Input-Pläne gefunden</p>
         </div>
       ) : viewMode === "list" ? (
         // Tabellen-Ansicht
         <div>
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monat</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bezug</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mechanik/Thema</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Standort</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Monat</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Bezug</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Mechanik/Thema</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Standort</th>
                 {showCompleted ? (
                   <>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Abgeschlossen am</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Abgeschlossen am</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Aktionen</th>
                   </>
                 ) : (
                   <>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">VÖ-Datum</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">VÖ-Datum</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Aktionen</th>
                   </>
                 )}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {paginatedPlans.map((plan) => (
-                <tr key={plan.id} className="hover:bg-gray-50">
+                <tr key={plan.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{plan.monat}</td>
                   <td className="px-6 py-4 text-sm">{plan.bezug}</td>
                   <td className="px-6 py-4 text-sm">{plan.mechanikThema}</td>
@@ -457,7 +457,7 @@ export default function InputPlanList({
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleStatusChange(plan.id, "IN_PROGRESS")}
-                            className="text-green-600 hover:text-green-900 text-sm font-medium"
+                            className="text-green-600 hover:text-green-900 dark:text-green-400 text-sm font-medium"
                             title="Reaktivieren"
                           >
                             Reaktivieren
@@ -469,7 +469,7 @@ export default function InputPlanList({
                                 fetchInputPlans();
                               }
                             }}
-                            className="text-red-600 hover:text-red-900 text-sm font-medium"
+                            className="text-red-600 hover:text-red-900 dark:text-red-400 text-sm font-medium"
                             title="Endgültig löschen"
                           >
                             Löschen
@@ -502,13 +502,13 @@ export default function InputPlanList({
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleEdit(plan)}
-                            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                            className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 text-sm font-medium"
                           >
                             Bearbeiten
                           </button>
                           <button
                             onClick={() => handleShowHistory(plan.id)}
-                            className="text-gray-600 hover:text-gray-900"
+                            className="text-gray-600 hover:text-gray-900 dark:text-gray-400"
                             title="Historie anzeigen"
                           >
                             <ClockIcon className="h-4 w-4" />
@@ -522,8 +522,8 @@ export default function InputPlanList({
                               }}
                               className={`text-sm font-medium ${
                                 plan.voe || plan.voeDate
-                                  ? "text-green-600 hover:text-green-900"
-                                  : "text-gray-400 cursor-not-allowed"
+                                  ? "text-green-600 hover:text-green-900 dark:text-green-400"
+                                  : "text-gray-400 cursor-not-allowed dark:text-gray-400"
                               }`}
                               disabled={!plan.voe && !plan.voeDate}
                               title={!plan.voe && !plan.voeDate ? "VÖ-Datum erforderlich" : "In Redaktionsplan übertragen"}
@@ -549,7 +549,7 @@ export default function InputPlanList({
                     className={`px-3 py-1 rounded ${
                       currentPage === i + 1
                         ? "bg-indigo-600 text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                     }`}
                   >
                     {i + 1}
@@ -574,29 +574,29 @@ export default function InputPlanList({
                     // COMPLETED wird ausgelassen
                   }
             ).map(([status, label]) => (
-              <div key={status} className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-700 mb-3">{label}</h3>
+              <div key={status} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-3">{label}</h3>
                 <div className="space-y-2">
                   {(groupedPlans[status] || []).map((plan) => (
                     <div
                       key={plan.id}
-                      className="bg-white p-3 rounded shadow hover:shadow-md transition-shadow"
+                      className="bg-white dark:bg-gray-800 p-3 rounded shadow hover:shadow-md transition-shadow"
                     >
                       <div 
                         className="cursor-pointer"
                         onClick={() => handleEdit(plan)}
                       >
                         <h4 className="font-medium text-sm">{plan.monat}</h4>
-                        <p className="text-xs text-gray-600 mt-1">{plan.bezug}</p>
-                        <p className="text-xs text-gray-500 mt-1">{plan.mechanikThema}</p>
-                        <p className="text-xs text-gray-400 mt-2">{plan.location.name}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{plan.bezug}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{plan.mechanikThema}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-400 mt-2">{plan.location.name}</p>
                         {plan.voeDate && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             VÖ: {new Date(plan.voeDate).toLocaleDateString('de-DE')}
                           </p>
                         )}
                         {plan.flag && (
-                          <span className="inline-block mt-1 px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
+                          <span className="inline-block mt-1 px-2 py-1 text-xs bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 rounded">
                             Markiert
                           </span>
                         )}
@@ -607,7 +607,7 @@ export default function InputPlanList({
                             e.stopPropagation();
                             handleShowHistory(plan.id);
                           }}
-                          className="text-gray-500 hover:text-gray-700"
+                          className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
                           title="Historie anzeigen"
                         >
                           <ClockIcon className="h-3.5 w-3.5" />
@@ -620,8 +620,8 @@ export default function InputPlanList({
                             }}
                             className={`text-xs font-medium py-1 px-2 rounded ${
                               plan.voe || plan.voeDate
-                                ? "bg-green-100 text-green-700 hover:bg-green-200" 
-                                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/40 dark:text-green-300"
+                                : "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
                             }`}
                             disabled={!plan.voe && !plan.voeDate}
                             title={!plan.voe && !plan.voeDate ? "VÖ-Datum erforderlich" : "In Redaktionsplan übertragen"}
@@ -646,7 +646,7 @@ export default function InputPlanList({
                     className={`px-3 py-1 rounded ${
                       currentPage === i + 1
                         ? "bg-indigo-600 text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                     }`}
                   >
                     {i + 1}
@@ -658,7 +658,7 @@ export default function InputPlanList({
         </div>
       )}
 
-      <div className="mt-4 text-sm text-gray-500 text-center">
+      <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
         {filteredAndSortedPlans.length} von {inputPlans.length} Input-Plänen
       </div>
 

@@ -6,18 +6,18 @@ export default async function HomePage() {
   const session = await getServerSession(authOptions);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-emerald-50">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
       {/* Navigation Header */}
       <header className="absolute top-0 w-full z-10">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">ContentPlaner</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">ContentPlaner</h1>
             </div>
             <div className="flex items-center gap-4">
               {session?.user ? (
                 <>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     {session.user.name || session.user.email}
                   </span>
                   <Link
@@ -29,7 +29,7 @@ export default async function HomePage() {
                   <form action="/api/auth/signout" method="post" className="inline">
                     <button
                       type="submit"
-                      className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                      className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 font-medium transition-colors"
                     >
                       Logout
                     </button>
@@ -39,7 +39,7 @@ export default async function HomePage() {
                 <>
                   <Link
                     href="/login"
-                    className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                    className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 font-medium transition-colors"
                   >
                     Login
                   </Link>
@@ -60,11 +60,11 @@ export default async function HomePage() {
       <main className="relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16">
           <div className="text-center">
-            <h2 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6">
+            <h2 className="text-5xl sm:text-6xl font-bold text-gray-900 dark:text-gray-100 mb-6">
               Content-Planung
               <span className="block text-violet-600">leicht gemacht</span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10">
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-10">
               Verwalten Sie Ihre Content-Pläne effizient an einem Ort. 
               Von der Idee bis zur Veröffentlichung – alles in einer übersichtlichen Plattform.
             </p>
@@ -79,7 +79,7 @@ export default async function HomePage() {
                 </Link>
                 <Link
                   href="/content-plans"
-                  className="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-lg font-semibold text-lg transition-colors border-2 border-gray-200"
+                  className="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-lg font-semibold text-lg transition-colors border-2 border-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700/50 dark:text-gray-100 dark:border-gray-700"
                 >
                   Content-Pläne ansehen
                 </Link>
@@ -94,7 +94,7 @@ export default async function HomePage() {
                 </Link>
                 <Link
                   href="/login"
-                  className="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-lg font-semibold text-lg transition-colors border-2 border-gray-200"
+                  className="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-lg font-semibold text-lg transition-colors border-2 border-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700/50 dark:text-gray-100 dark:border-gray-700"
                 >
                   Anmelden
                 </Link>
@@ -106,38 +106,38 @@ export default async function HomePage() {
         {/* Features Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow dark:bg-gray-800">
               <div className="w-12 h-12 bg-violet-100 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-2">Content-Planung</h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Erstellen und verwalten Sie Ihre Content-Pläne mit einer intuitiven Oberfläche.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow dark:bg-gray-800">
               <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-2">Input-Management</h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Sammeln Sie Ideen und Inputs von verschiedenen Quellen an einem zentralen Ort.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow dark:bg-gray-800">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-2">Redaktionsplan</h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Behalten Sie den Überblick über alle Veröffentlichungen und Deadlines.
               </p>
             </div>
@@ -200,9 +200,9 @@ export default async function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 border-t border-gray-200">
+      <footer className="bg-gray-50 border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-600">
+          <div className="text-center text-gray-600 dark:text-gray-400">
             <p>&copy; 2024 ContentPlaner. Alle Rechte vorbehalten.</p>
           </div>
         </div>

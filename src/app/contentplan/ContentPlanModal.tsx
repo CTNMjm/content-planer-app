@@ -82,7 +82,7 @@ export default function ContentPlanModal({ item, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 w-full max-w-2xl">
         <h2 className="text-xl font-bold mb-4">
           {item ? "Content-Idee bearbeiten" : "Neue Content-Idee"}
         </h2>
@@ -95,7 +95,7 @@ export default function ContentPlanModal({ item, onClose }: Props) {
                 value={form.monat}
                 onChange={handleChange}
                 required
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
                 placeholder="z.B. Juli"
               />
             </div>
@@ -106,7 +106,7 @@ export default function ContentPlanModal({ item, onClose }: Props) {
                 value={form.bezug}
                 onChange={handleChange}
                 required
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
                 placeholder="z.B. Event"
               />
             </div>
@@ -117,7 +117,7 @@ export default function ContentPlanModal({ item, onClose }: Props) {
                 value={form.mechanikThema}
                 onChange={handleChange}
                 required
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
                 placeholder="z.B. Summer Vibes"
               />
             </div>
@@ -128,7 +128,7 @@ export default function ContentPlanModal({ item, onClose }: Props) {
                 value={form.platzierung}
                 onChange={handleChange}
                 required
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
                 placeholder="z.B. Instagram"
               />
             </div>
@@ -138,7 +138,7 @@ export default function ContentPlanModal({ item, onClose }: Props) {
                 name="status"
                 value={form.status}
                 onChange={handleChange}
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
               >
                 <option value="DRAFT">Entwurf</option>
                 <option value="APPROVED">Bereit</option>
@@ -152,7 +152,7 @@ export default function ContentPlanModal({ item, onClose }: Props) {
                 name="mehrwert"
                 value={form.mehrwert}
                 onChange={handleChange}
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
                 placeholder="optional"
               />
             </div>
@@ -163,7 +163,7 @@ export default function ContentPlanModal({ item, onClose }: Props) {
                 value={form.locationId}
                 onChange={handleChange}
                 required
-                className="w-full border rounded px-2 py-1"
+                className="w-full border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
               >
                 <option value="">Standort wählen…</option>
                 {locations.map(loc => (
@@ -179,16 +179,16 @@ export default function ContentPlanModal({ item, onClose }: Props) {
               value={form.idee}
               onChange={handleChange}
               required
-              className="w-full border rounded px-2 py-1 min-h-[60px]"
+              className="w-full border rounded px-2 py-1 min-h-[60px] dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
               placeholder="z.B. Was glaubst du, was der Artikel kostet? ..."
             />
           </div>
-          {error && <div className="text-red-600 bg-red-50 px-3 py-2 rounded">{error}</div>}
+          {error && <div className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded">{error}</div>}
           <div className="flex justify-end gap-2 mt-4">
             <button
               type="button"
               onClick={() => onClose(false)}
-              className="bg-gray-200 rounded px-4 py-2"
+              className="bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 rounded px-4 py-2"
               disabled={loading}
             >
               Abbrechen

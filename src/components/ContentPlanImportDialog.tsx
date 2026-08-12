@@ -102,10 +102,10 @@ Februar,Bezug 2,Mehrwert 2,Mechanik 2,Idee 2,Platzierung 2,Level 2,Format 2,Brie
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
                 <Dialog.Title
                   as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900 mb-4"
+                  className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4"
                 >
                   Content Plan importieren
                 </Dialog.Title>
@@ -114,43 +114,43 @@ Februar,Bezug 2,Mehrwert 2,Mechanik 2,Idee 2,Platzierung 2,Level 2,Format 2,Brie
                   <div>
                     <button
                       onClick={downloadTemplate}
-                      className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
                       📥 Vorlage herunterladen
                     </button>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">CSV-Datei auswählen</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">CSV-Datei auswählen</label>
                     <input
                       type="file"
                       accept=".csv"
                       onChange={handleFileChange}
-                      className="w-full p-2 border border-gray-300 rounded-md"
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md"
                     />
                   </div>
 
                   {error && (
-                    <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-md text-sm">
+                    <div className="p-4 bg-red-50 dark:bg-red-900/40 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 rounded-md text-sm">
                       {error}
                     </div>
                   )}
 
-                  <div className="bg-blue-50 p-4 rounded-md text-sm">
+                  <div className="bg-blue-50 dark:bg-blue-900/40 p-4 rounded-md text-sm dark:text-blue-300">
                     <p className="font-semibold mb-2">Wichtige Hinweise:</p>
                     <ul className="list-disc list-inside space-y-1">
                       <li>Die CSV-Datei muss UTF-8 kodiert sein</li>
                       <li>Die erste Zeile muss die Spaltenüberschriften enthalten</li>
                       <li>Status-Werte: DRAFT, IN_PROGRESS, REVIEW, APPROVED, COMPLETED</li>
                       <li>Pflichtfelder: monat, bezug, mechanikThema, idee, platzierung</li>
-                      <li className="text-red-600 font-semibold">Wählen Sie einen Standort im Filter aus!</li>
+                      <li className="text-red-600 dark:text-red-400 font-semibold">Wählen Sie einen Standort im Filter aus!</li>
                     </ul>
                   </div>
 
                   <div className="flex justify-end space-x-2 mt-6">
                     <button
                       type="button"
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       onClick={onClose}
                     >
                       Abbrechen

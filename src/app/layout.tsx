@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -7,19 +7,15 @@ export const metadata: Metadata = {
   description: "Content Planning Application",
 };
 
-// App ist hell gestaltet; feste Farbgebung, damit macOS-Dark-Mode die
-// Lesbarkeit nicht bricht (setzt <meta name="color-scheme" content="light">).
-export const viewport: Viewport = {
-  colorScheme: "light",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // suppressHydrationWarning: next-themes setzt die theme-Klasse auf <html>
+  // vor der Hydration -> verhindert Hydration-Mismatch-Warnungen.
   return (
-    <html lang="de">
+    <html lang="de" suppressHydrationWarning>
       <body>
         <Providers>{children}</Providers>
       </body>

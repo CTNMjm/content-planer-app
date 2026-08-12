@@ -125,12 +125,12 @@ export default function UserManagement() {
 
   const getRoleBadge = (role: string) => {
     const roleConfig = {
-      ADMIN: { text: "Admin", class: "bg-red-100 text-red-800" },
-      AGENTUR: { text: "Agentur", class: "bg-blue-100 text-blue-800" },
-      USER: { text: "Kunde", class: "bg-green-100 text-green-800" },
+      ADMIN: { text: "Admin", class: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300" },
+      AGENTUR: { text: "Agentur", class: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300" },
+      USER: { text: "Kunde", class: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300" },
     };
 
-    const config = roleConfig[role as keyof typeof roleConfig] || { text: role, class: "bg-gray-100 text-gray-800" };
+    const config = roleConfig[role as keyof typeof roleConfig] || { text: role, class: "bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-300" };
     return (
       <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.class}`}>
         {config.text}
@@ -149,13 +149,13 @@ export default function UserManagement() {
           placeholder="Suche nach E-Mail oder Name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-4 py-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="all">Alle Rollen</option>
           <option value="ADMIN">Nur Admins</option>
@@ -173,33 +173,33 @@ export default function UserManagement() {
 
       {/* Benutzer-Tabelle */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700/50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 E-Mail
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Rolle
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Zugewiesene Standorte
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Erstellt am
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Aktionen
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {filteredUsers.map((user) => (
               <tr key={user.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -216,8 +216,8 @@ export default function UserManagement() {
                     onClick={() => handleToggleActive(user)}
                     className={`px-2 py-1 text-xs font-medium rounded-full ${
                       user.isActive
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                        : "bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-300"
                     }`}
                   >
                     {user.isActive ? "Aktiv" : "Inaktiv"}
@@ -227,21 +227,21 @@ export default function UserManagement() {
                 >
                   {user.userLocations && user.userLocations.length > 0
                     ? user.userLocations.map((ul: any) => ul.location.name).join(", ")
-                    : <span className="text-gray-400">-</span>}
+                    : <span className="text-gray-400 dark:text-gray-400">-</span>}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {new Date(user.createdAt).toLocaleDateString("de-DE")}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button
                     onClick={() => handleEdit(user)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-3"
+                    className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 mr-3"
                   >
                     Bearbeiten
                   </button>
                   <button
                     onClick={() => handleDelete(user.id)}
-                    className="text-red-600 hover:text-red-900"
+                    className="text-red-600 hover:text-red-900 dark:text-red-400"
                   >
                     Löschen
                   </button>

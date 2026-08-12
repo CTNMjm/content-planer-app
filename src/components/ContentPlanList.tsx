@@ -333,11 +333,11 @@ export default function ContentPlanList() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      DRAFT: { text: "Entwurf", class: "bg-gray-100 text-gray-800" },
-      IN_PROGRESS: { text: "In Bearbeitung", class: "bg-yellow-100 text-yellow-800" },
-      REVIEW: { text: "Überprüfung", class: "bg-orange-100 text-orange-800" },     
-      APPROVED: { text: "Freigegeben", class: "bg-green-100 text-green-800" },     
-      COMPLETED: { text: "Abgeschlossen", class: "bg-blue-100 text-blue-800" },    
+      DRAFT: { text: "Entwurf", class: "bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-300" },
+      IN_PROGRESS: { text: "In Bearbeitung", class: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300" },
+      REVIEW: { text: "Überprüfung", class: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300" },
+      APPROVED: { text: "Freigegeben", class: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300" },
+      COMPLETED: { text: "Abgeschlossen", class: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300" },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.DRAFT;
@@ -359,26 +359,26 @@ export default function ContentPlanList() {
     if (totalPages <= 1) return null;
 
     return (
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 dark:bg-gray-800 dark:border-gray-700 sm:px-6">
         <div className="flex justify-between flex-1 sm:hidden">
           <button
             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Zurück
           </button>
           <button
             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:text-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Weiter
           </button>
         </div>
         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               Zeige <span className="font-medium">{filteredPlans.length > 0 ? startIndex + 1 : 0}</span> bis{' '}
               <span className="font-medium">{Math.min(endIndex, filteredPlans.length)}</span> von{' '}
               <span className="font-medium">{filteredPlans.length}</span> Ergebnissen
@@ -389,7 +389,7 @@ export default function ContentPlanList() {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="relative inline-flex items-center px-2 py-2 text-gray-400 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center px-2 py-2 text-gray-400 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="sr-only">Zurück</span>
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -403,8 +403,8 @@ export default function ContentPlanList() {
                   onClick={() => setCurrentPage(index + 1)}
                   className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
                     currentPage === index + 1
-                      ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      ? 'z-10 bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-900/40 dark:border-blue-400 dark:text-blue-300'
+                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700/50'
                   } border`}
                 >
                   {index + 1}
@@ -414,7 +414,7 @@ export default function ContentPlanList() {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="relative inline-flex items-center px-2 py-2 text-gray-400 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center px-2 py-2 text-gray-400 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="sr-only">Weiter</span>
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -433,7 +433,7 @@ export default function ContentPlanList() {
   }
 
   if (error) {
-    return <div className="p-8 text-red-600">Fehler: {error}</div>;
+    return <div className="p-8 text-red-600 dark:text-red-400">Fehler: {error}</div>;
   }
 
   return (
@@ -494,7 +494,7 @@ export default function ContentPlanList() {
               placeholder="Suchen in Bezug, Mechanik/Thema, Idee, Monat..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
             />
           </div>
 
@@ -502,14 +502,14 @@ export default function ContentPlanList() {
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setViewMode("list")}
-              className={`px-4 py-2 rounded-md border ${viewMode === "list" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700"}`}
+              className={`px-4 py-2 rounded-md border ${viewMode === "list" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200"}`}
               title="Listenansicht"
             >
               Listenansicht
             </button>
             <button
               onClick={() => setViewMode("grid")}
-              className={`px-4 py-2 rounded-md border ${viewMode === "grid" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700"}`}
+              className={`px-4 py-2 rounded-md border ${viewMode === "grid" ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200"}`}
               title="Kanbanansicht"
             >
               Kanbanansicht
@@ -523,7 +523,7 @@ export default function ContentPlanList() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
           >
             <option value="all">Alle Status</option>
             <option value="DRAFT">Entwurf</option>
@@ -536,7 +536,7 @@ export default function ContentPlanList() {
           <select
             value={locationFilter}
             onChange={(e) => setLocationFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
           >
             <option value="all">Alle Standorte</option>
             {Array.from(new Set(contentPlans.map(p => p.location.id))).map(locationId => {
@@ -551,7 +551,7 @@ export default function ContentPlanList() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
           >
             <option value="monat">Sortieren nach Monat</option>
             <option value="bezug">Sortieren nach Bezug</option>
@@ -563,7 +563,7 @@ export default function ContentPlanList() {
           {/* Sortierreihenfolge */}
           <button
             onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-            className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center gap-2"
+            className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50 flex items-center gap-2"
             title={sortOrder === "asc" ? "Aufsteigend" : "Absteigend"}
           >
             {sortOrder === "asc" ? (
@@ -581,9 +581,9 @@ export default function ContentPlanList() {
         {/* Aktive Filter anzeigen */}
         {(searchTerm || statusFilter !== "all" || locationFilter !== "all") && (
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-600">Aktive Filter:</span>
+            <span className="text-gray-600 dark:text-gray-400">Aktive Filter:</span>
             {searchTerm && (
-              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full flex items-center gap-1">
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded-full flex items-center gap-1">
                 Suche: {searchTerm}
                 <button onClick={() => setSearchTerm("")} className="hover:text-blue-900">
                   <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -593,7 +593,7 @@ export default function ContentPlanList() {
               </span>
             )}
             {statusFilter !== "all" && (
-              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full flex items-center gap-1">
+              <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 rounded-full flex items-center gap-1">
                 Status: {getStatusBadge(statusFilter).props.children}
                 <button onClick={() => setStatusFilter("all")} className="hover:text-green-900">
                   <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -603,7 +603,7 @@ export default function ContentPlanList() {
               </span>
             )}
             {locationFilter !== "all" && (
-              <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full flex items-center gap-1">
+              <span className="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 rounded-full flex items-center gap-1">
                 Standort: {contentPlans.find(p => p.location.id === locationFilter)?.location.name}
                 <button onClick={() => setLocationFilter("all")} className="hover:text-purple-900">
                   <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -618,7 +618,7 @@ export default function ContentPlanList() {
                 setStatusFilter("all");
                 setLocationFilter("all");
               }}
-              className="text-gray-500 hover:text-gray-700 underline"
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 underline"
             >
               Alle zurücksetzen
             </button>
@@ -631,30 +631,30 @@ export default function ContentPlanList() {
       ) : viewMode === "list" ? (
         <>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Monat
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Bezug
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Mechanik/Thema
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Standort
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Aktionen
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                 {currentPlans.map((plan) => (
                   <tr key={plan.id}>
                     <td className="px-6 py-4 whitespace-nowrap">{plan.monat}</td>    
@@ -667,7 +667,7 @@ export default function ContentPlanList() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button
                         onClick={() => handleShowHistory(plan)}
-                        className="mr-3 text-blue-600 hover:text-blue-900"
+                        className="mr-3 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                         title="Historie anzeigen"
                       >
                         Historie
@@ -676,8 +676,8 @@ export default function ContentPlanList() {
                         onClick={() => handleConvert(plan)}
                         className={`mr-3 ${
                           plan.status === 'APPROVED'
-                            ? 'text-green-600 hover:text-green-900 cursor-pointer'   
-                            : 'text-gray-400 cursor-not-allowed'
+                            ? 'text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 cursor-pointer'
+                            : 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
                         }`}
                         title={
                           plan.status === 'APPROVED'
@@ -694,8 +694,8 @@ export default function ContentPlanList() {
                         onClick={() => handleEdit(plan)}
                         className={`mr-3 ${
                           plan.status !== 'COMPLETED'
-                            ? 'text-indigo-600 hover:text-indigo-900 cursor-pointer' 
-                            : 'text-gray-400 cursor-not-allowed'
+                            ? 'text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer'
+                            : 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
                         }`}
                         disabled={plan.status === 'COMPLETED'}
                       >
@@ -703,7 +703,7 @@ export default function ContentPlanList() {
                       </button>
                       <button
                         onClick={() => handleDelete(plan.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                       >
                         Löschen
                       </button>
@@ -720,50 +720,50 @@ export default function ContentPlanList() {
         <>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {currentPlans.map((plan) => (
-              <div key={plan.id} className="bg-white overflow-hidden shadow rounded-lg">
+              <div key={plan.id} className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">{plan.monat}</h3>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{plan.monat}</h3>
                     {getStatusBadge(plan.status)}
                   </div>
                   <dl className="space-y-2">
                     <div>
-                      <dt className="text-sm font-medium text-gray-500">Bezug</dt>   
-                      <dd className="text-sm text-gray-900">{plan.bezug}</dd>        
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Bezug</dt>
+                      <dd className="text-sm text-gray-900 dark:text-gray-100">{plan.bezug}</dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-500">Mechanik/Thema</dt>
-                      <dd className="text-sm text-gray-900">{plan.mechanikThema}</dd>
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Mechanik/Thema</dt>
+                      <dd className="text-sm text-gray-900 dark:text-gray-100">{plan.mechanikThema}</dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-500">Standort</dt>
-                      <dd className="text-sm text-gray-900">{plan.location.name}</dd>
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Standort</dt>
+                      <dd className="text-sm text-gray-900 dark:text-gray-100">{plan.location.name}</dd>
                     </div>
                   </dl>
                 </div>
-                <div className="bg-gray-50 px-4 py-4 sm:px-6">
+                <div className="bg-gray-50 dark:bg-gray-700/50 px-4 py-4 sm:px-6">
                   <div className="text-sm space-x-3">
                     <button
                       onClick={() => handleShowHistory(plan)}
-                      className="text-blue-600 hover:text-blue-900 font-medium"
+                      className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                     >
                       Historie
                     </button>
                     <button
                       onClick={() => handleConvert(plan)}
-                      className="text-green-600 hover:text-green-900 font-medium"    
+                      className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 font-medium"
                     >
                       → Input
                     </button>
                     <button
                       onClick={() => handleEdit(plan)}
-                      className="text-indigo-600 hover:text-indigo-900 font-medium"  
+                      className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
                     >
                       Bearbeiten
                     </button>
                     <button
                       onClick={() => handleDelete(plan.id)}
-                      className="text-red-600 hover:text-red-900 font-medium"        
+                      className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium"
                     >
                       Löschen
                     </button>

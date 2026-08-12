@@ -130,59 +130,59 @@ export function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="bg-white px-6 pb-6 pt-6 sm:p-8 sm:pb-6 rounded-lg shadow-md">
+                  <div className="bg-white dark:bg-gray-800 px-6 pb-6 pt-6 sm:p-8 sm:pb-6 rounded-lg shadow-md">
                     <div className="sm:flex sm:items-start">
                       <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                        <Dialog.Title as="h3" className="text-xl font-semibold leading-6 text-gray-900 mb-6">
+                        <Dialog.Title as="h3" className="text-xl font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-6">
                           {user ? "Benutzer bearbeiten" : "Neuer Benutzer"}
                         </Dialog.Title>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                               E-Mail *
                             </label>
                             <input
                               type="email"
                               value={formData.email}
                               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
+                              className="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
                               required
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Name
                             </label>
                             <input
                               type="text"
                               value={formData.name}
                               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
+                              className="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Passwort {!user && "*"}
                             </label>
                             <input
                               type="password"
                               value={formData.password}
                               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
+                              className="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
                               placeholder={user ? "Leer lassen für keine Änderung" : ""}
                               required={!user}
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                               Rolle *
                             </label>
                             <select
                               value={formData.role}
                               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
+                              className="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3"
                             >
                               <option value="USER">Kunde</option>
                               <option value="AGENTUR">Agentur</option>
@@ -194,9 +194,9 @@ export function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
                               type="checkbox"
                               checked={formData.isActive}
                               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                              className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              className="h-5 w-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
                             />
-                            <label className="block text-base text-gray-900">
+                            <label className="block text-base text-gray-900 dark:text-gray-100">
                               Aktiv
                             </label>
                           </div>
@@ -205,15 +205,15 @@ export function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
                               type="checkbox"
                               checked={formData.limitedLocations}
                               onChange={(e) => setFormData({ ...formData, limitedLocations: e.target.checked })}
-                              className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              className="h-5 w-5 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
                             />
-                            <label className="block text-base text-gray-900">
+                            <label className="block text-base text-gray-900 dark:text-gray-100">
                               Nur explizit zugewiesene Standorte anzeigen (limitedLocations)
                             </label>
                           </div>
                         </div>
                         <div className="col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Zugewiesene Standorte
                           </label>
                           <select
@@ -223,7 +223,7 @@ export function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
                               const options = Array.from(e.target.selectedOptions).map(opt => opt.value);
                               setSelectedLocationIds(options);
                             }}
-                            className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3 h-40 bg-white"
+                            className="block w-full rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-base px-4 py-3 h-40 bg-white dark:bg-gray-700 dark:text-gray-100"
                           >
                             {locations.map((loc) => (
                               <option key={loc.id} value={loc.id}>
@@ -231,14 +231,14 @@ export function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
                               </option>
                             ))}
                           </select>
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             Mit Strg/Cmd oder Shift mehrere auswählen
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-8 rounded-b-lg">
+                  <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-8 rounded-b-lg">
                     <button
                       type="submit"
                       className="inline-flex w-full justify-center rounded-md bg-blue-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto"
@@ -247,7 +247,7 @@ export function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
                     </button>
                     <button
                       type="button"
-                      className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-4 py-2 text-base font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                      className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-700 px-4 py-2 text-base font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 sm:mt-0 sm:w-auto"
                       onClick={onClose}
                     >
                       Abbrechen

@@ -270,7 +270,7 @@ export function ContentPlanModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-xl bg-white shadow-2xl transition-all">
+              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-8 py-6">
                   <Dialog.Title as="h3" className="text-xl font-semibold text-white">
@@ -283,7 +283,7 @@ export function ContentPlanModal({
                     {/* Basis Information */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Monat *
                         </label>
                         <select
@@ -291,7 +291,7 @@ export function ContentPlanModal({
                           value={formData.monat}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         >
                           <option value="">Bitte wählen</option>
                           {["Januar", "Februar", "März", "April", "Mai", "Juni", 
@@ -302,7 +302,7 @@ export function ContentPlanModal({
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Bezug *
                         </label>
                         <select
@@ -310,7 +310,7 @@ export function ContentPlanModal({
                           value={formData.bezug}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         >
                           <option value="">Bitte wählen</option>
                           <option value="Vielfalt">Vielfalt</option>
@@ -324,7 +324,7 @@ export function ContentPlanModal({
                     {/* Mechanik/Thema und Mehrwert */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Mechanik/Thema *
                         </label>
                         <input
@@ -334,12 +334,12 @@ export function ContentPlanModal({
                           onChange={handleChange}
                           required
                           placeholder="z.B. Rabattaktion, Gewinnspiel"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Mehrwert
                         </label>
                         <input
@@ -348,7 +348,7 @@ export function ContentPlanModal({
                           value={formData.mehrwert}
                           onChange={handleChange}
                           placeholder="z.B. 20% Rabatt, Kostenlose Lieferung"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         />
                       </div>
                     </div>
@@ -356,7 +356,7 @@ export function ContentPlanModal({
                     {/* Platzierung und Status */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Platzierung *
                         </label>
                         <select
@@ -364,7 +364,7 @@ export function ContentPlanModal({
                           value={formData.platzierung}
                           onChange={handleChange}
                           required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         >
                           <option value="">Bitte wählen</option>
                           <option value="FB + IG">FB + IG</option>
@@ -377,7 +377,7 @@ export function ContentPlanModal({
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Status
                         </label>
                         <select
@@ -385,7 +385,7 @@ export function ContentPlanModal({
                           value={formData.status}
                           onChange={handleChange}
                           required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                           <option value="DRAFT">Entwurf</option>
                           <option value="IN_PROGRESS">In Bearbeitung</option>
@@ -406,7 +406,7 @@ export function ContentPlanModal({
                           onChange={handleChange}
                           required
                           disabled={locationsState.length === 0}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 dark:disabled:bg-gray-800"
                         >
                           <option value="">
                             {locationsState.length === 0 ? "Keine Standorte verfügbar" : "Bitte wählen"}
@@ -419,7 +419,7 @@ export function ContentPlanModal({
                         </select>
                         
                         {/* Debug Info */}
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           Aktuelle ID: {formData.locationId || 'keine'} | 
                           Verfügbar: {locationsState.length} Standorte
                         </div>
@@ -428,7 +428,7 @@ export function ContentPlanModal({
 
                     {/* Idee */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Idee *
                       </label>
                       <textarea
@@ -438,25 +438,25 @@ export function ContentPlanModal({
                         required
                         rows={4}
                         placeholder="Beschreiben Sie Ihre Content-Idee..."
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
                       />
                     </div>
 
                     {/* Neue Felder in einem erweiterbaren Bereich */}
-                    <div className="col-span-2 border-t pt-4 mt-4">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Erweiterte Felder</h3>
+                    <div className="col-span-2 border-t dark:border-gray-700 pt-4 mt-4">
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Erweiterte Felder</h3>
                       
                       <div className="grid grid-cols-2 gap-4">
                         {/* Implementation Level */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Umsetzungslevel
                           </label>
                           <select
                             name="implementationLevel"
                             value={formData.implementationLevel}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           >
                             <option value="">Bitte wählen</option>
                             <option value="EINFACH">Einfach</option>
@@ -467,7 +467,7 @@ export function ContentPlanModal({
 
                         {/* Creative Format */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Kreativformat
                           </label>
                           <input
@@ -475,14 +475,14 @@ export function ContentPlanModal({
                             name="creativeFormat"
                             value={formData.creativeFormat}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             placeholder="z.B. Video, Infografik, Artikel"
                           />
                         </div>
 
                         {/* Action */}
                         <div className="col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Aktion
                           </label>
                           <input
@@ -490,14 +490,14 @@ export function ContentPlanModal({
                             name="action"
                             value={formData.action}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             placeholder="z.B. Call-to-Action, nächste Schritte"
                           />
                         </div>
 
                         {/* Creative Briefing Example */}
                         <div className="col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Kreativ-Briefing Beispiel
                           </label>
                           <textarea
@@ -505,14 +505,14 @@ export function ContentPlanModal({
                             value={formData.creativeBriefingExample}
                             onChange={handleChange}
                             rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             placeholder="Detailliertes Briefing für die kreative Umsetzung..."
                           />
                         </div>
 
                         {/* Copy Example */}
                         <div className="col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Text-Beispiel
                           </label>
                           <textarea
@@ -520,14 +520,14 @@ export function ContentPlanModal({
                             value={formData.copyExample}
                             onChange={handleChange}
                             rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             placeholder="Beispieltext für den Content..."
                           />
                         </div>
 
                         {/* Copy Example Customized */}
                         <div className="col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Angepasstes Text-Beispiel
                           </label>
                           <textarea
@@ -535,14 +535,14 @@ export function ContentPlanModal({
                             value={formData.copyExampleCustomized}
                             onChange={handleChange}
                             rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             placeholder="Standort-spezifisch angepasster Text..."
                           />
                         </div>
 
                         {/* First Comment for Engagement */}
                         <div className="col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Erster Kommentar für Engagement
                           </label>
                           <textarea
@@ -550,14 +550,14 @@ export function ContentPlanModal({
                             value={formData.firstCommentForEngagement}
                             onChange={handleChange}
                             rows={2}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             placeholder="Kommentar um Diskussion anzuregen..."
                           />
                         </div>
 
                         {/* Notes */}
                         <div className="col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Notizen
                           </label>
                           <textarea
@@ -565,7 +565,7 @@ export function ContentPlanModal({
                             value={formData.notes}
                             onChange={handleChange}
                             rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             placeholder="Interne Notizen und Anmerkungen..."
                           />
                         </div>
@@ -578,7 +578,7 @@ export function ContentPlanModal({
                     <button
                       type="button"
                       onClick={onClose}
-                      className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
+                      className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       Abbrechen
                     </button>
@@ -594,8 +594,8 @@ export function ContentPlanModal({
                   {/* Erfolgsnachricht nach Abschluss */}
                   {formData.status === 'COMPLETED' && (
                     <div className="col-span-3 mt-2">
-                      <div className="p-3 bg-green-100 border border-green-300 rounded-md">
-                        <p className="text-sm text-green-800">
+                      <div className="p-3 bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-800 rounded-md">
+                        <p className="text-sm text-green-800 dark:text-green-300">
                           ✓ Dieser Plan wurde erfolgreich in die Input-Liste übertragen
                         </p>
                       </div>
@@ -666,12 +666,12 @@ function ConvertToInputModal(props: ConvertToInputModalProps) {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-xl bg-white shadow-2xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Plan in Input-Liste übertragen
                   </h3>
-                  <p className="text-sm text-gray-500 mb-6">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                     Möchten Sie diesen Content-Plan wirklich in die Input-Liste übertragen?
                   </p>
 
@@ -680,7 +680,7 @@ function ConvertToInputModal(props: ConvertToInputModalProps) {
                     <button
                       type="button"
                       onClick={onClose}
-                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       Abbrechen
                     </button>

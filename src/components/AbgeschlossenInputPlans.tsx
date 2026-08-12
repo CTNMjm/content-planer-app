@@ -204,10 +204,10 @@ export default function AbgeschlossenInputPlans() {
     if (totalPages <= 1) return null;
 
     return (
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+      <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 sm:px-6">
         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               Zeige <span className="font-medium">{filteredPlans.length > 0 ? startIndex + 1 : 0}</span> bis{' '}
               <span className="font-medium">{Math.min(endIndex, filteredPlans.length)}</span> von{' '}
               <span className="font-medium">{filteredPlans.length}</span> Ergebnissen
@@ -218,7 +218,7 @@ export default function AbgeschlossenInputPlans() {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="relative inline-flex items-center px-2 py-2 text-gray-400 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center px-2 py-2 text-gray-400 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-l-md hover:bg-gray-50 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -233,8 +233,8 @@ export default function AbgeschlossenInputPlans() {
                     onClick={() => setCurrentPage(pageNumber)}
                     className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
                       currentPage === pageNumber
-                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700/50'
                     } border`}
                   >
                     {pageNumber}
@@ -245,7 +245,7 @@ export default function AbgeschlossenInputPlans() {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="relative inline-flex items-center px-2 py-2 text-gray-400 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative inline-flex items-center px-2 py-2 text-gray-400 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-r-md hover:bg-gray-50 dark:hover:bg-gray-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -264,7 +264,7 @@ export default function AbgeschlossenInputPlans() {
   }
 
   if (error) {
-    return <div className="p-8 text-red-600">Fehler: {error}</div>;
+    return <div className="p-8 text-red-600 dark:text-red-400">Fehler: {error}</div>;
   }
 
   return (
@@ -273,7 +273,7 @@ export default function AbgeschlossenInputPlans() {
         <div className="flex items-center gap-4">
           <Link
             href="/inputplan"
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-600 hover:text-gray-900 dark:text-gray-400"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -281,7 +281,7 @@ export default function AbgeschlossenInputPlans() {
           </Link>
           <h1 className="text-2xl font-bold">Abgeschlossene Input-Pläne</h1>
         </div>
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           {filteredPlans.length} abgeschlossene Pläne
         </div>
       </div>
@@ -296,7 +296,7 @@ export default function AbgeschlossenInputPlans() {
               placeholder="Suchen in abgeschlossenen Plänen..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -304,7 +304,7 @@ export default function AbgeschlossenInputPlans() {
           <select
             value={locationFilter}
             onChange={(e) => setLocationFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">Alle Standorte</option>
             {Array.from(new Set(inputPlans.map(p => p.location.id))).map(locationId => {
@@ -319,7 +319,7 @@ export default function AbgeschlossenInputPlans() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="completedAt">Sortieren nach Abschlussdatum</option>
             <option value="datum">Sortieren nach VOE Datum</option>
@@ -330,7 +330,7 @@ export default function AbgeschlossenInputPlans() {
           {/* Sortierreihenfolge */}
           <button
             onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-            className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center gap-2"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2"
             title={sortOrder === "asc" ? "Aufsteigend" : "Absteigend"}
           >
             {sortOrder === "asc" ? (
@@ -348,36 +348,36 @@ export default function AbgeschlossenInputPlans() {
 
       {filteredPlans.length === 0 ? (
         <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p className="mt-2 text-gray-600">Keine abgeschlossenen Input-Pläne gefunden.</p>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Keine abgeschlossenen Input-Pläne gefunden.</p>
           <Link
             href="/inputplan"
-            className="mt-4 inline-block text-blue-600 hover:text-blue-700"
+            className="mt-4 inline-block text-blue-600 hover:text-blue-700 dark:text-blue-400"
           >
             Zurück zur Hauptansicht
           </Link>
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto bg-white rounded-lg shadow">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monat</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bezug</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mechanik/Thema</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Standort</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Abgeschlossen am</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Monat</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Bezug</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Mechanik/Thema</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Standort</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Abgeschlossen am</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aktionen</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {currentPlans.map((plan) => (
                   <tr
                     key={plan.id}
-                    className="hover:bg-gray-50 cursor-pointer"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                     onClick={() => {
                       setSelectedPlan(plan);
                       setIsModalOpen(true);
@@ -387,13 +387,13 @@ export default function AbgeschlossenInputPlans() {
                     <td className="px-6 py-4 whitespace-nowrap">{plan.bezug}</td>
                     <td className="px-6 py-4">{plan.mechanikThema}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{plan.location.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {new Date(plan.updatedAt).toLocaleDateString('de-DE')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => handleReactivate(plan.id)}
-                        className="mr-3 text-green-600 hover:text-green-900"
+                        className="mr-3 text-green-600 hover:text-green-900 dark:text-green-400"
                         title="Plan reaktivieren"
                       >
                         {/* Icon wie bei ContentPlan */}
@@ -401,7 +401,7 @@ export default function AbgeschlossenInputPlans() {
                       </button>
                       <button
                         onClick={() => handleDelete(plan.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 dark:text-red-400"
                         title="Endgültig löschen"
                       >
                         {/* Icon wie bei ContentPlan */}
@@ -420,7 +420,7 @@ export default function AbgeschlossenInputPlans() {
       {/* Detail Modal für abgeschlossene Pläne */}
       {isModalOpen && selectedPlan && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-green-600 text-white border-b px-6 py-4 flex justify-between items-center">
               <h2 className="text-xl font-semibold">Details: {selectedPlan.idee.substring(0, 50)}...</h2>
@@ -445,13 +445,13 @@ export default function AbgeschlossenInputPlans() {
                   <h3 className="font-semibold text-lg mb-3">Basis-Informationen</h3>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Monat</label>
-                    <p className="mt-1 text-gray-900">{selectedPlan.monat}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Monat</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">{selectedPlan.monat}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">VOE Datum</label>
-                    <p className="mt-1 text-gray-900">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">VOE Datum</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">
                       {selectedPlan.voe ? 
                         new Date(selectedPlan.voe).toLocaleDateString('de-DE', {
                           day: '2-digit',
@@ -463,43 +463,43 @@ export default function AbgeschlossenInputPlans() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Bezug</label>
-                    <p className="mt-1 text-gray-900">{selectedPlan.bezug}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bezug</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">{selectedPlan.bezug}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Mehrwert</label>
-                    <p className="mt-1 text-gray-900">{selectedPlan.mehrwert || '-'}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Mehrwert</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">{selectedPlan.mehrwert || '-'}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Mechanik/Thema</label>
-                    <p className="mt-1 text-gray-900">{selectedPlan.mechanikThema}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Mechanik/Thema</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">{selectedPlan.mechanikThema}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Platzierung</label>
-                    <p className="mt-1 text-gray-900">{selectedPlan.platzierung}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Platzierung</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">{selectedPlan.platzierung}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Standort</label>
-                    <p className="mt-1 text-gray-900">{selectedPlan.location.name}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Standort</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">{selectedPlan.location.name}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">
                       Abgeschlossen
                     </span>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Flag</label>
-                    <p className="mt-1 text-gray-900">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Flag</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">
                       {selectedPlan.flag ? 
-                        <span className="text-red-600">✓ Markiert</span> : 
-                        <span className="text-gray-400">Nicht markiert</span>
+                        <span className="text-red-600 dark:text-red-400">✓ Markiert</span> :
+                        <span className="text-gray-400 dark:text-gray-400">Nicht markiert</span>
                       }
                     </p>
                   </div>
@@ -510,23 +510,23 @@ export default function AbgeschlossenInputPlans() {
                   <h3 className="font-semibold text-lg mb-3">Content-Informationen</h3>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Idee</label>
-                    <p className="mt-1 text-gray-900 whitespace-pre-wrap">{selectedPlan.idee}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Idee</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{selectedPlan.idee}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Umsetzungslevel</label>
-                    <p className="mt-1 text-gray-900">{selectedPlan.implementationLevel || '-'}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Umsetzungslevel</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">{selectedPlan.implementationLevel || '-'}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Format</label>
-                    <p className="mt-1 text-gray-900">{selectedPlan.creativeFormat || '-'}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Format</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">{selectedPlan.creativeFormat || '-'}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Action</label>
-                    <p className="mt-1 text-gray-900">{selectedPlan.action || '-'}</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Action</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100">{selectedPlan.action || '-'}</p>
                   </div>
                 </div>
 
@@ -535,57 +535,57 @@ export default function AbgeschlossenInputPlans() {
                   <h3 className="font-semibold text-lg mb-3">Zusätzliche Informationen</h3>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Creative Briefing + Beispiel</label>
-                    <p className="mt-1 text-gray-900 whitespace-pre-wrap bg-gray-50 p-3 rounded">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Creative Briefing + Beispiel</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
                       {selectedPlan.creativeBriefingExample || '-'}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Copy-Beispiel</label>
-                    <p className="mt-1 text-gray-900 whitespace-pre-wrap bg-gray-50 p-3 rounded">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Copy-Beispiel</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
                       {selectedPlan.copyExample || '-'}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Copy-Beispiel (individuell aufbereitet)</label>
-                    <p className="mt-1 text-gray-900 whitespace-pre-wrap bg-gray-50 p-3 rounded">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Copy-Beispiel (individuell aufbereitet)</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
                       {selectedPlan.copyExampleCustomized || '-'}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Erster Kommentar zur Interaktionsförderung</label>
-                    <p className="mt-1 text-gray-900 whitespace-pre-wrap bg-gray-50 p-3 rounded">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Erster Kommentar zur Interaktionsförderung</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
                       {selectedPlan.firstCommentForEngagement || '-'}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Notes</label>
-                    <p className="mt-1 text-gray-900 whitespace-pre-wrap bg-gray-50 p-3 rounded">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
                       {selectedPlan.notes || '-'}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Zusatzinfo</label>
-                    <p className="mt-1 text-gray-900 whitespace-pre-wrap bg-gray-50 p-3 rounded">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Zusatzinfo</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap bg-gray-50 dark:bg-gray-700/50 p-3 rounded">
                       {selectedPlan.zusatzinfo || '-'}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">N8N Ergebnis</label>
-                    <p className="mt-1 text-gray-900 whitespace-pre-wrap bg-gray-50 p-3 rounded max-h-40 overflow-y-auto">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">N8N Ergebnis</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap bg-gray-50 dark:bg-gray-700/50 p-3 rounded max-h-40 overflow-y-auto">
                       {selectedPlan.n8nResult || '-'}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">GPT Ergebnis</label>
-                    <p className="mt-1 text-gray-900 whitespace-pre-wrap bg-gray-50 p-3 rounded max-h-40 overflow-y-auto">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">GPT Ergebnis</label>
+                    <p className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap bg-gray-50 dark:bg-gray-700/50 p-3 rounded max-h-40 overflow-y-auto">
                       {selectedPlan.gptResult || '-'}
                     </p>
                   </div>
@@ -595,22 +595,22 @@ export default function AbgeschlossenInputPlans() {
                 <div className="space-y-4 md:col-span-2 pt-4 border-t">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Erstellt am</label>
-                      <p className="mt-1 text-gray-900">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Erstellt am</label>
+                      <p className="mt-1 text-gray-900 dark:text-gray-100">
                         {new Date(selectedPlan.createdAt).toLocaleString('de-DE')}
                       </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Abgeschlossen am</label>
-                      <p className="mt-1 text-gray-900">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Abgeschlossen am</label>
+                      <p className="mt-1 text-gray-900 dark:text-gray-100">
                         {new Date(selectedPlan.updatedAt).toLocaleString('de-DE')}
                       </p>
                     </div>
                   </div>
                   {selectedPlan.contentPlanId && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Ursprung</label>
-                      <p className="mt-1 text-gray-900">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Ursprung</label>
+                      <p className="mt-1 text-gray-900 dark:text-gray-100">
                         Erstellt aus ContentPlan ID: {selectedPlan.contentPlanId}
                       </p>
                     </div>
@@ -625,7 +625,7 @@ export default function AbgeschlossenInputPlans() {
                     setIsModalOpen(false);
                     setSelectedPlan(null);
                   }}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                 >
                   Schließen
                 </button>

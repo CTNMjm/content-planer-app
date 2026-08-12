@@ -182,7 +182,7 @@ export function InputPlanModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 text-left align-middle shadow-xl transition-all">
                 <form onSubmit={handleSubmit}>
                   {/* Modal Header */}
                   <div className="sticky top-0 bg-green-600 text-white border-b px-6 py-4 flex justify-between items-center">
@@ -206,13 +206,13 @@ export function InputPlanModal({
                         <h3 className="font-semibold text-lg mb-3">Basis-Informationen</h3>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Monat *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Monat *</label>
                           <select
                             value={formData.monat}
                             onChange={(e) => setFormData({ ...formData, monat: e.target.value })}
                             disabled={readOnly}
                             required
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           >
                             <option value="">Bitte wählen…</option>
                             {MONATE.map((monat) => (
@@ -224,7 +224,7 @@ export function InputPlanModal({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             Veröffentlichungsdatum (VÖ) {formData.status === "APPROVED" && "*"}
                           </label>
                           <input
@@ -232,24 +232,24 @@ export function InputPlanModal({
                             value={formData.voe || ""}
                             onChange={e => setFormData({ ...formData, voe: e.target.value })}
                             disabled={readOnly}
-                            className={`mt-1 w-full p-2 border rounded ${
+                            className={`mt-1 w-full p-2 border rounded dark:text-gray-100 ${
                               errors.voe
-                                ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                                : "border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                            } ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                                ? "border-red-300 dark:border-red-700 focus:border-red-500 focus:ring-red-500"
+                                : "border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:ring-indigo-500"
+                            } ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
-                          {errors.voe && <p className="mt-1 text-sm text-red-600">{errors.voe}</p>}
+                          {errors.voe && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.voe}</p>}
                         </div>
                  
                         {/* Standort Auswahl - neu hinzugefügt */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Standort *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Standort *</label>
                           <select
                             value={formData.locationId}
                             onChange={(e) => setFormData({ ...formData, locationId: e.target.value })}
                             disabled={readOnly}
                             required
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           >
                             <option value="">Bitte wählen</option>
                             {locations.map(loc => (
@@ -258,48 +258,48 @@ export function InputPlanModal({
                           </select>
                         </div>
             <div>
-                          <label className="block text-sm font-medium text-gray-700">Mechanik/Thema *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Mechanik/Thema *</label>
                           <input
                             type="text"
                             value={formData.mechanikThema}
                             onChange={(e) => setFormData({ ...formData, mechanikThema: e.target.value })}
                             disabled={readOnly}
                             required
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Bezug *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bezug *</label>
                           <input
                             type="text"
                             value={formData.bezug}
                             onChange={(e) => setFormData({ ...formData, bezug: e.target.value })}
                             disabled={readOnly}
                             required
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
             
                      <div>
-                          <label className="block text-sm font-medium text-gray-700">Platzierung *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Platzierung *</label>
                           <input
                             type="text"
                             value={formData.platzierung}
                             onChange={(e) => setFormData({ ...formData, platzierung: e.target.value })}
                             disabled={readOnly}
                             required
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
                             <div>
-                          <label className="block text-sm font-medium text-gray-700">Format</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Format</label>
                           <input
                             type="text"
                             value={formData.creativeFormat || ""}
                             onChange={(e) => setFormData({ ...formData, creativeFormat: e.target.value })}
                             disabled={readOnly}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
 
@@ -313,7 +313,7 @@ export function InputPlanModal({
                         <h3 className="font-semibold text-lg mb-3">Content-Informationen</h3>
                         
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Status</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                           <select
                             value={formData.status}
                             onChange={(e) => {
@@ -327,7 +327,7 @@ export function InputPlanModal({
                               }
                             }}
                             disabled={readOnly}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           >
                             <option value="DRAFT">Entwurf</option>
                             <option value="IN_PROGRESS">In Bearbeitung</option>
@@ -337,54 +337,54 @@ export function InputPlanModal({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Idee *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Idee *</label>
                           <textarea
                             value={formData.idee}
                             onChange={(e) => setFormData({ ...formData, idee: e.target.value })}
                             disabled={readOnly}
                             required
                             rows={3}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
             
       
             
              <div>
-                          <label className="block text-sm font-medium text-gray-700">Action</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Action</label>
                           <input
                             type="text"
                             value={formData.action || ""}
                             onChange={(e) => setFormData({ ...formData, action: e.target.value })}
                             disabled={readOnly}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Umsetzungslevel</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Umsetzungslevel</label>
                           <input
                             type="text"
                             value={formData.implementationLevel || ""}
                             onChange={(e) => setFormData({ ...formData, implementationLevel: e.target.value })}
                             disabled={readOnly}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
             
             <div>
-                          <label className="block text-sm font-medium text-gray-700">Mehrwert</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Mehrwert</label>
                           <input
                             type="text"
                             value={formData.mehrwert || ""}
                             onChange={(e) => setFormData({ ...formData, mehrwert: e.target.value })}
                             disabled={readOnly}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             <input
                               type="checkbox"
                               checked={formData.flag}
@@ -402,13 +402,13 @@ export function InputPlanModal({
                         <h3 className="font-semibold text-lg mb-3">Zusätzliche Informationen</h3>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Creative Briefing + Beispiel</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Creative Briefing + Beispiel</label>
                           <textarea
                             value={formData.creativeBriefingExample || ""}
                             onChange={(e) => setFormData({ ...formData, creativeBriefingExample: e.target.value })}
                             disabled={readOnly}
                             rows={3}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
 
@@ -426,7 +426,7 @@ export function InputPlanModal({
                             <button
                               type="button"
                               onClick={handleShowHistory}
-                              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                              className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                               title="Generierungsverlauf anzeigen"
                             >
                               <ClockIcon className="h-5 w-5" />
@@ -435,7 +435,7 @@ export function InputPlanModal({
                         )}
 
                         {/* Copy-Beispiel mit visueller Verbindung */}
-                        <div className={`${!readOnly ? 'bg-gray-50 p-4 rounded-lg border border-gray-200' : ''}`}>
+                        <div className={`${!readOnly ? 'bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700' : ''}`}>
                           <div className="flex items-start gap-2">
                             {!readOnly && (
                               <div className="mt-1">
@@ -444,17 +444,17 @@ export function InputPlanModal({
                               </div>
                             )}
                             <div className="flex-1">
-                              <label className="block text-sm font-medium text-gray-700">
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Copy-Beispiel
-                                {!readOnly && <span className="text-xs text-gray-500 ml-2">(Wird durch AI generiert)</span>}
+                                {!readOnly && <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Wird durch AI generiert)</span>}
                               </label>
                               <textarea
                                 value={formData.copyExample || ""}
                                 onChange={(e) => setFormData({ ...formData, copyExample: e.target.value })}
                                 disabled={readOnly}
                                 rows={3}
-                                className={`mt-1 w-full p-2 border rounded ${
-                                  readOnly ? "bg-gray-100 cursor-not-allowed" : "bg-white"
+                                className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${
+                                  readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "bg-white dark:bg-gray-700"
                                 }`}
                                 placeholder={!readOnly ? "Klicke auf 'Text generieren' um automatisch einen Copy-Text zu erstellen..." : ""}
                               />
@@ -463,46 +463,46 @@ export function InputPlanModal({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Copy-Beispiel (individuell aufbereitet)</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Copy-Beispiel (individuell aufbereitet)</label>
                           <textarea
                             value={formData.copyExampleCustomized || ""}
                             onChange={(e) => setFormData({ ...formData, copyExampleCustomized: e.target.value })}
                             disabled={readOnly}
                             rows={3}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Erster Kommentar zur Interaktionsförderung</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Erster Kommentar zur Interaktionsförderung</label>
                           <textarea
                             value={formData.firstCommentForEngagement || ""}
                             onChange={(e) => setFormData({ ...formData, firstCommentForEngagement: e.target.value })}
                             disabled={readOnly}
                             rows={2}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Notes</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
                           <textarea
                             value={formData.notes || ""}
                             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                             disabled={readOnly}
                             rows={3}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Zusatzinfo</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Zusatzinfo</label>
                           <textarea
                             value={formData.zusatzinfo || ""}
                             onChange={(e) => setFormData({ ...formData, zusatzinfo: e.target.value })}
                             disabled={readOnly}
                             rows={3}
-                            className={`mt-1 w-full p-2 border rounded ${readOnly ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                            className={`mt-1 w-full p-2 border rounded dark:border-gray-600 dark:text-gray-100 ${readOnly ? "bg-gray-100 cursor-not-allowed dark:bg-gray-800" : "dark:bg-gray-700"}`}
                           />
                         </div>
 
@@ -510,22 +510,22 @@ export function InputPlanModal({
                         {(formData.n8nResult || formData.gptResult) && (
                           <>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700">N8N Ergebnis</label>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">N8N Ergebnis</label>
                               <textarea
                                 value={formData.n8nResult || ""}
                                 disabled
                                 rows={4}
-                                className="mt-1 w-full p-2 border rounded bg-gray-100"
+                                className="mt-1 w-full p-2 border rounded bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                               />
                             </div>
 
                             <div>
-                              <label className="block text-sm font-medium text-gray-700">GPT Ergebnis</label>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">GPT Ergebnis</label>
                               <textarea
                                 value={formData.gptResult || ""}
                                 disabled
                                 rows={4}
-                                className="mt-1 w-full p-2 border rounded bg-gray-100"
+                                className="mt-1 w-full p-2 border rounded bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                               />
                             </div>
                           </>
@@ -535,10 +535,10 @@ export function InputPlanModal({
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-between">
-                    <div className="text-sm text-gray-500">
+                  <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-6 py-4 flex justify-between">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
                       {errors.voe && (
-                        <span className="text-red-600">
+                        <span className="text-red-600 dark:text-red-400">
                           Bitte beheben Sie die Fehler vor dem Speichern
                         </span>
                       )}
@@ -547,7 +547,7 @@ export function InputPlanModal({
                       <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                        className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600"
                       >
                         {readOnly ? "Schließen" : "Abbrechen"}
                       </button>

@@ -44,22 +44,22 @@ function LoginContent() {
   };
 
   return (
-    <main className="flex items-center justify-center min-h-screen bg-gray-50">
+    <main className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="w-full max-w-md">
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-lg p-8 space-y-6"
+          className="bg-white rounded-2xl shadow-lg p-8 space-y-6 dark:bg-gray-800"
         >
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-            <p className="mt-2 text-sm text-gray-600">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Welcome Back</h1>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               Sign in to continue to your account
             </p>
           </div>
 
           {registered && (
-            <div className="p-3 rounded-lg bg-green-50 border border-green-200">
-              <p className="text-sm text-green-800">
+            <div className="p-3 rounded-lg bg-green-50 border border-green-200 dark:bg-green-900/40 dark:border-green-700">
+              <p className="text-sm text-green-800 dark:text-green-300">
                 Registration successful! Please sign in.
               </p>
             </div>
@@ -69,7 +69,7 @@ function LoginContent() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
                 Email Address
               </label>
@@ -79,7 +79,7 @@ function LoginContent() {
                 name="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
                 required
                 disabled={loading}
               />
@@ -88,7 +88,7 @@ function LoginContent() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
                 Password
               </label>
@@ -98,7 +98,7 @@ function LoginContent() {
                 name="password"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
                 required
                 disabled={loading}
               />
@@ -106,8 +106,8 @@ function LoginContent() {
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="p-3 rounded-lg bg-red-50 border border-red-200 dark:bg-red-900/40 dark:border-red-700">
+              <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
             </div>
           )}
 
@@ -119,7 +119,7 @@ function LoginContent() {
             {loading ? "Signing in..." : "Sign In"}
           </button>
 
-          <p className="text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
             Don&apos;t have an account?{" "}
             <Link
               href="/register"

@@ -133,7 +133,7 @@ export function RedakPlanModal({
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl">
                 <form onSubmit={handleSubmit}>
                   {/* Modal Header */}
                   <div className="sticky top-0 bg-orange-600 text-white px-6 py-4 flex justify-between items-center">
@@ -157,7 +157,7 @@ export function RedakPlanModal({
                         <h3 className="font-semibold text-lg mb-3">Basis-Informationen</h3>
                         
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Monat *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Monat *</label>
                           <input
                             type="text"
                             value={formData.monat}
@@ -165,78 +165,78 @@ export function RedakPlanModal({
                             disabled={readOnly}
                             required
                             placeholder="z.B. 2025-01"
-                            className={`mt-1 w-full p-2 border rounded-md ${
-                              readOnly ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
+                            className={`mt-1 w-full p-2 border rounded-md dark:text-gray-100 ${
+                              readOnly ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                             }`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">VOE Datum *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">VOE Datum *</label>
                           <input
                             type="date"
                             value={formData.voe}
                             onChange={(e) => setFormData({...formData, voe: e.target.value})}
                             disabled={readOnly}
                             required
-                            className={`mt-1 w-full p-2 border rounded-md ${
-                              readOnly ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
+                            className={`mt-1 w-full p-2 border rounded-md dark:text-gray-100 ${
+                              readOnly ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                             }`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Bezug *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bezug *</label>
                           <input
                             type="text"
                             value={formData.bezug}
                             onChange={(e) => setFormData({...formData, bezug: e.target.value})}
                             disabled={readOnly}
                             required
-                            className={`mt-1 w-full p-2 border rounded-md ${
-                              readOnly ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
+                            className={`mt-1 w-full p-2 border rounded-md dark:text-gray-100 ${
+                              readOnly ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                             }`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Mechanik/Thema *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Mechanik/Thema *</label>
                           <input
                             type="text"
                             value={formData.mechanikThema}
                             onChange={(e) => setFormData({...formData, mechanikThema: e.target.value})}
                             disabled={readOnly}
                             required
-                            className={`mt-1 w-full p-2 border rounded-md ${
-                              readOnly ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
+                            className={`mt-1 w-full p-2 border rounded-md dark:text-gray-100 ${
+                              readOnly ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                             }`}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Platzierung *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Platzierung *</label>
                           <input
                             type="text"
                             value={formData.platzierung}
                             onChange={(e) => setFormData({...formData, platzierung: e.target.value})}
                             disabled={readOnly}
                             required
-                            className={`mt-1 w-full p-2 border rounded-md ${
-                              readOnly ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
+                            className={`mt-1 w-full p-2 border rounded-md dark:text-gray-100 ${
+                              readOnly ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                             }`}
                           />
                         </div>
 
                         {locations.length > 0 && (
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Standort *</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Standort *</label>
                             <select
                               value={formData.locationId}
                               onChange={(e) => setFormData({...formData, locationId: e.target.value})}
                               disabled={readOnly}
                               required
-                              className={`mt-1 w-full p-2 border rounded-md ${
-                                readOnly ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
+                              className={`mt-1 w-full p-2 border rounded-md dark:text-gray-100 ${
+                                readOnly ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                               }`}
                             >
                               <option value="">Bitte wählen...</option>
@@ -255,13 +255,13 @@ export function RedakPlanModal({
                         <h3 className="font-semibold text-lg mb-3">Status & Content</h3>
                         
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Status</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                           <select
                             value={formData.status}
                             onChange={(e) => setFormData({...formData, status: e.target.value as RedakPlan['status']})}
                             disabled={readOnly}
-                            className={`mt-1 w-full p-2 border rounded-md ${
-                              readOnly ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
+                            className={`mt-1 w-full p-2 border rounded-md dark:text-gray-100 ${
+                              readOnly ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                             }`}
                           >
                             <option value="DRAFT">Entwurf</option>
@@ -273,7 +273,7 @@ export function RedakPlanModal({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             <input
                               type="checkbox"
                               checked={formData.publiziert}
@@ -286,15 +286,15 @@ export function RedakPlanModal({
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Idee *</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Idee *</label>
                           <textarea
                             value={formData.idee}
                             onChange={(e) => setFormData({...formData, idee: e.target.value})}
                             disabled={readOnly}
                             required
                             rows={6}
-                            className={`mt-1 w-full p-2 border rounded-md ${
-                              readOnly ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
+                            className={`mt-1 w-full p-2 border rounded-md dark:text-gray-100 ${
+                              readOnly ? 'bg-gray-100 cursor-not-allowed dark:bg-gray-800' : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                             }`}
                           />
                         </div>
@@ -307,8 +307,8 @@ export function RedakPlanModal({
                           
                           {redakPlan.inputPlan && (
                             <div>
-                              <label className="block text-sm font-medium text-gray-700">Erstellt aus InputPlan</label>
-                              <p className="mt-1 text-gray-900 bg-gray-50 p-2 rounded">
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Erstellt aus InputPlan</label>
+                              <p className="mt-1 text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
                                 ID: {redakPlan.inputPlan.id}
                                 {redakPlan.inputPlan.idee && (
                                   <>
@@ -322,14 +322,14 @@ export function RedakPlanModal({
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-sm font-medium text-gray-700">Erstellt am</label>
-                              <p className="mt-1 text-gray-900">
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Erstellt am</label>
+                              <p className="mt-1 text-gray-900 dark:text-gray-100">
                                 {redakPlan.createdAt ? new Date(redakPlan.createdAt).toLocaleString('de-DE') : '-'}
                               </p>
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-gray-700">Zuletzt geändert</label>
-                              <p className="mt-1 text-gray-900">
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Zuletzt geändert</label>
+                              <p className="mt-1 text-gray-900 dark:text-gray-100">
                                 {redakPlan.updatedAt ? new Date(redakPlan.updatedAt).toLocaleString('de-DE') : '-'}
                               </p>
                             </div>
@@ -340,11 +340,11 @@ export function RedakPlanModal({
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex justify-end space-x-3 border-t">
+                  <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 px-6 py-4 flex justify-end space-x-3 border-t dark:border-gray-700">
                     <button
                       type="button"
                       onClick={onClose}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                      className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
                     >
                       {readOnly ? 'Schließen' : 'Abbrechen'}
                     </button>

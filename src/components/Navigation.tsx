@@ -70,7 +70,7 @@ export default function Navigation() {
   if (!session) return null;
 
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-white shadow-md dark:bg-gray-800 dark:shadow-none dark:border-b dark:border-gray-700">
       <div className="container mx-auto px-4">
         <div className="flex space-x-8">
           {/* Hauptnavigation */}
@@ -81,9 +81,9 @@ export default function Navigation() {
                 href={item.href}
                 className={`
                   px-4 py-4 text-sm font-medium border-b-2 transition-colors
-                  ${pathname === item.href 
-                    ? 'border-blue-500 text-blue-600' 
-                    : 'border-transparent text-gray-700 hover:text-blue-600 hover:border-gray-300'
+                  ${pathname === item.href
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-700 hover:text-blue-600 hover:border-gray-300 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:border-gray-600'
                   }
                 `}
               >
@@ -96,7 +96,7 @@ export default function Navigation() {
           {visibleAdminItems.length > 0 && (
             <>
               <div className="flex items-center">
-                <div className="w-px h-6 bg-gray-300" />
+                <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />
               </div>
               <div className="flex space-x-1">
                 {visibleAdminItems.map((item) => (
@@ -105,9 +105,9 @@ export default function Navigation() {
                     href={item.href}
                     className={`
                       px-4 py-4 text-sm font-medium border-b-2 transition-colors
-                      ${pathname === item.href 
-                        ? 'border-red-500 text-red-600' 
-                        : 'border-transparent text-gray-700 hover:text-red-600 hover:border-gray-300'
+                      ${pathname === item.href
+                        ? 'border-red-500 text-red-600 dark:text-red-400'
+                        : 'border-transparent text-gray-700 hover:text-red-600 hover:border-gray-300 dark:text-gray-300 dark:hover:text-red-400 dark:hover:border-gray-600'
                       }
                     `}
                   >

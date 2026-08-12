@@ -87,10 +87,10 @@ export default function ContentPlanExportDialog({ isOpen, onClose, locationId }:
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
                 <Dialog.Title
                   as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900 mb-4"
+                  className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4"
                 >
                   Content Plan exportieren
                 </Dialog.Title>
@@ -98,11 +98,11 @@ export default function ContentPlanExportDialog({ isOpen, onClose, locationId }:
                 <div className="space-y-4">
                   {/* Status Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <select 
-                      value={filters.status} 
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                    <select
+                      value={filters.status}
                       onChange={(e) => setFilters({...filters, status: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="all">Alle</option>
                       <option value={ContentStatus.DRAFT}>Entwurf</option>
@@ -115,11 +115,11 @@ export default function ContentPlanExportDialog({ isOpen, onClose, locationId }:
 
                   {/* Monat Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Monat</label>
-                    <select 
-                      value={filters.monat} 
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Monat</label>
+                    <select
+                      value={filters.monat}
                       onChange={(e) => setFilters({...filters, monat: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="all">Alle</option>
                       {["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"].map(month => (
@@ -130,8 +130,8 @@ export default function ContentPlanExportDialog({ isOpen, onClose, locationId }:
 
                   {/* Felder Auswahl */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Zu exportierende Felder</label>
-                    <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto p-2 border border-gray-200 rounded">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Zu exportierende Felder</label>
+                    <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto p-2 border border-gray-200 dark:border-gray-700 rounded">
                       {Object.entries(filters.fields).map(([field, checked]) => (
                         <label key={field} className="flex items-center space-x-2 cursor-pointer">
                           <input
@@ -143,9 +143,9 @@ export default function ContentPlanExportDialog({ isOpen, onClose, locationId }:
                                 fields: {...filters.fields, [field]: e.target.checked}
                               })
                             }
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                           />
-                          <span className="text-sm">{field}</span>
+                          <span className="text-sm dark:text-gray-300">{field}</span>
                         </label>
                       ))}
                     </div>
@@ -154,7 +154,7 @@ export default function ContentPlanExportDialog({ isOpen, onClose, locationId }:
                   <div className="flex justify-end space-x-2 mt-6">
                     <button
                       type="button"
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       onClick={onClose}
                     >
                       Abbrechen

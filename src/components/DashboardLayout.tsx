@@ -14,13 +14,13 @@ export default async function DashboardLayout({
   const session = await getServerSession(authOptions);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white shadow-sm border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/dashboard" className="text-2xl font-bold text-gray-900">
+              <Link href="/dashboard" className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 ContentPlaner
               </Link>
             </div>
@@ -28,10 +28,10 @@ export default async function DashboardLayout({
             {/* User Menu */}
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {session?.user.name || "User"}
                 </p>
-                <p className="text-xs text-gray-500">{session?.user.email}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{session?.user.email}</p>
               </div>
               <div className="relative">
                 <div className="h-10 w-10 rounded-full bg-violet-500 flex items-center justify-center text-white font-semibold">
@@ -41,7 +41,7 @@ export default async function DashboardLayout({
               <form action="/api/auth/signout" method="POST">
                 <button
                   type="submit"
-                  className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   Logout
                 </button>
@@ -52,28 +52,28 @@ export default async function DashboardLayout({
       </header>
 
       {/* Breadcrumbs & Title */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {breadcrumbs.length > 0 && (
             <nav className="flex mb-2" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-3">
                 <li className="inline-flex items-center">
-                  <Link href="/dashboard" className="text-gray-700 hover:text-gray-900">
+                  <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
                     Dashboard
                   </Link>
                 </li>
                 {breadcrumbs.map((crumb, index) => (
                   <li key={index}>
                     <div className="flex items-center">
-                      <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                       </svg>
                       {crumb.href ? (
-                        <Link href={crumb.href} className="ml-1 text-gray-700 hover:text-gray-900">
+                        <Link href={crumb.href} className="ml-1 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
                           {crumb.label}
                         </Link>
                       ) : (
-                        <span className="ml-1 text-gray-500">{crumb.label}</span>
+                        <span className="ml-1 text-gray-500 dark:text-gray-400">{crumb.label}</span>
                       )}
                     </div>
                   </li>
@@ -81,7 +81,7 @@ export default async function DashboardLayout({
               </ol>
             </nav>
           )}
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
         </div>
       </div>
 

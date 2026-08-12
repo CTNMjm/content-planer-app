@@ -89,25 +89,25 @@ export default function LocationsPage() {
         </button>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+      <div className="bg-white shadow-md rounded-lg overflow-hidden dark:bg-gray-800">
         <table className="min-w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 dark:bg-gray-700/50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Name Test
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Erstellt am
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Aktionen
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
             {locations.map((location) => (
               <tr key={location.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -117,14 +117,14 @@ export default function LocationsPage() {
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       location.status === "ACTIVE"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                        : "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
                     }`}
                   >
                     {location.status === "ACTIVE" ? "Aktiv" : "Inaktiv"}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {new Date(location.createdAt).toLocaleDateString("de-DE")}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -142,8 +142,8 @@ export default function LocationsPage() {
                     }}
                     className={
                       location.status === "ACTIVE"
-                        ? "text-red-600 hover:text-red-900 mr-4"
-                        : "text-green-600 hover:text-green-900 mr-4"
+                        ? "text-red-600 hover:text-red-900 mr-4 dark:text-red-400 dark:hover:text-red-300"
+                        : "text-green-600 hover:text-green-900 mr-4 dark:text-green-400 dark:hover:text-green-300"
                     }
                   >
                     {location.status === "ACTIVE" ? "Deaktivieren" : "Aktivieren"}
@@ -158,7 +158,7 @@ export default function LocationsPage() {
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-96">
+          <div className="bg-white rounded-lg p-6 w-96 dark:bg-gray-800">
             <h2 className="text-xl font-bold mb-4">Neuer Standort</h2>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">Name</label>
@@ -168,7 +168,7 @@ export default function LocationsPage() {
                 onChange={(e) =>
                   setNewLocation({ ...newLocation, name: e.target.value })
                 }
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
               />
             </div>
             <div className="mb-4">
@@ -190,7 +190,7 @@ export default function LocationsPage() {
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 Abbrechen
               </button>

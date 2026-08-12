@@ -129,21 +129,21 @@ export function ContentPlanHistory({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl transition-all">
                 {/* Header */}
-                <div className="bg-gray-50 px-6 py-4 border-b">
+                <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-b dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Dialog.Title className="text-lg font-semibold text-gray-900">
+                      <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         Historie
                       </Dialog.Title>
                       {contentPlanTitle && (
-                        <p className="text-sm text-gray-600 mt-1">{contentPlanTitle}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{contentPlanTitle}</p>
                       )}
                     </div>
                     <button
                       onClick={onClose}
-                      className="text-gray-400 hover:text-gray-500"
+                      className="text-gray-400 dark:text-gray-500 hover:text-gray-500"
                     >
                       <X className="h-5 w-5" />
                     </button>
@@ -156,7 +156,7 @@ export function ContentPlanHistory({
                     <div className="text-center py-8">
                       <div className="inline-flex items-center">
                         <svg
-                          className="animate-spin h-5 w-5 text-gray-500 mr-3"
+                          className="animate-spin h-5 w-5 text-gray-500 dark:text-gray-400 mr-3"
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
                           viewBox="0 0 24 24"
@@ -175,11 +175,11 @@ export function ContentPlanHistory({
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           ></path>
                         </svg>
-                        <span className="text-gray-500">Lade Historie...</span>
+                        <span className="text-gray-500 dark:text-gray-400">Lade Historie...</span>
                       </div>
                     </div>
                   ) : history.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                       Keine Historie vorhanden
                     </div>
                   ) : (
@@ -187,18 +187,18 @@ export function ContentPlanHistory({
                       {history.map((entry) => (
                         <div
                           key={entry.id}
-                          className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                          className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 text-sm">
-                                <span className="font-medium text-gray-900">
+                                <span className="font-medium text-gray-900 dark:text-gray-100">
                                   {getActionLabel(entry.action)}
                                 </span>
                                 {entry.fieldName && (
                                   <>
-                                    <span className="text-gray-500">•</span>
-                                    <span className="text-gray-700">
+                                    <span className="text-gray-500 dark:text-gray-400">•</span>
+                                    <span className="text-gray-700 dark:text-gray-300">
                                       {getFieldLabel(entry.fieldName)}
                                     </span>
                                   </>
@@ -207,24 +207,24 @@ export function ContentPlanHistory({
 
                               {entry.oldValue && entry.newValue && (
                                 <div className="mt-2 text-sm">
-                                  <span className="text-gray-500">Von:</span>{" "}
-                                  <span className="font-medium text-gray-700">
+                                  <span className="text-gray-500 dark:text-gray-400">Von:</span>{" "}
+                                  <span className="font-medium text-gray-700 dark:text-gray-300">
                                     {formatValue(entry.fieldName || "", entry.oldValue)}
                                   </span>
-                                  <span className="text-gray-500 mx-2">→</span>
-                                  <span className="font-medium text-gray-900">
+                                  <span className="text-gray-500 dark:text-gray-400 mx-2">→</span>
+                                  <span className="font-medium text-gray-900 dark:text-gray-100">
                                     {formatValue(entry.fieldName || "", entry.newValue)}
                                   </span>
                                 </div>
                               )}
 
                               {entry.metadata?.reason && (
-                                <div className="mt-2 text-sm text-gray-600">
+                                <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                                   Grund: {entry.metadata.reason}
                                 </div>
                               )}
 
-                              <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
+                              <div className="mt-3 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                                 <div className="flex items-center gap-1">
                                   <User className="h-3 w-3" />
                                   <span>{entry.changedBy.name}</span>
@@ -249,11 +249,11 @@ export function ContentPlanHistory({
                 </div>
 
                 {/* Footer */}
-                <div className="bg-gray-50 px-6 py-3 border-t">
+                <div className="bg-gray-50 dark:bg-gray-900 px-6 py-3 border-t dark:border-gray-700">
                   <div className="flex justify-end">
                     <button
                       onClick={onClose}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       Schließen
                     </button>
