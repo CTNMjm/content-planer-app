@@ -1,5 +1,26 @@
 # Dev-Log — content-planer-app
 
+## 2026-08-15 — Deployment vollständig live gebracht + Dark-Mode
+
+### Coolify-Deployment: vom 503 zur laufenden App mit gültigem HTTPS
+Nach den Build-Fixes (siehe Teil 3) baute Coolify zwar, aber `dev.cp-app.control-monitor.de` blieb **503**. Ursachenkette, per Server-Terminal (Coolify läuft direkt auf dem Hetzner-Host) Schritt für Schritt aufgelöst:
+
+1. **Health-Endpoint** `src/app/api/health/route.ts` ergänzt (liefert immer 200, ohne Auth/DB) — als verlässliches Ziel für Health-Checks; `proxy.ts` schützt nur Seitenpfade, nicht `/api/*`.
+2. **503 „no available server"** = Traefik hatte keinen Backend-Container. Ursache: Die **Coolify-Labels der App verwiesen auf veraltete Traefik-Entrypoints `web`/`websecure`**, dieser Traefik hat aber `http`/`https` (Container stammte aus einer alten Coolify-Version). → In den Custom Labels (General-Tab) `web`→`http`, `websecure`→`https` gesetzt, Redeploy → App erreichbar (200). App selbst war die ganze Zeit gesund (im Container verifiziert: `next start`, `/login` 200).
+3. **Self-signed Zertifikat** (serverweit, seit Juli): Die **`acme.json` war bei exakt 60 KB abgeschnitten** (abgebrochener Schreibvorgang) → ungültiges JSON → Traefik konnte den Let's-Encrypt-Account nicht laden, kein Zertifikat für irgendeine Domain. → `acme.json` auf `{}` zurückgesetzt (Backup vorher), Proxy-Neustart → Traefik registrierte frischen Account und zog gültige Let's-Encrypt-Zertifikate. `dev.cp-app.control-monitor.de` liefert jetzt ein echtes Zertifikat (Issuer Let's Encrypt), HTTPS ohne Warnung.
+
+**Deployment-Notizen (Coolify):** Coolify läuft auf dem Hetzner-Host (138.199.166.94), Auto-Deploy per Git-Webhook auf `main`. Bei Traefik-„no available server" trotz gesundem Container: Entrypoint-Labels prüfen (`http`/`https`, nicht `web`/`websecure`). ACME-Zertifikate hängen an einer gültigen `acme.json` unter `/data/coolify/proxy/acme.json`.
+
+### UI: Lesbarkeit im Dark-Mode + echter Dark-Mode mit Umschalter
+- **Sofortfix:** Der übrig gebliebene Next-Vorlagenblock `@media (prefers-color-scheme: dark)` in `globals.css` färbte auf macOS-Dark-Mode nur den Seitenhintergrund schwarz, während alle Komponenten hell gestylt blieben → unlesbar. Zunächst hell erzwungen (`color-scheme: light`).
+- **Dann echtes Dark-Theme** (auf Kundenwunsch): **next-themes** + Tailwind `darkMode: 'class'`, `ThemeProvider` (Default „System", flackerfrei), **In-App-Umschalter** (`src/components/ThemeToggle.tsx`, Sonne/Mond/Monitor) oben rechts im Header, schaltet System → Hell → Dunkel und speichert die Wahl. `globals.css` mit heller + dunkler Palette. **Über 1.000 `dark:`-Varianten** über alle Komponenten ergänzt (Nav, Header, Listen/Tabellen, Formular-Modals inkl. Eingabefelder, History-/Convert-/Export-Dialoge, Admin, Login/Register, Dashboard) — bestehende helle Gestaltung unverändert. Umsetzung via 6 parallele Sub-Agenten nach einheitlicher Farb-Spec (bg-white→dark:bg-gray-800, text-gray-900→dark:text-gray-100, Badges bg-{c}-100/text-{c}-800→dark:bg-{c}-900/40 dark:text-{c}-300 usw.).
+- Verifikation: `tsc` 0 Fehler, Produktions-Build (Webpack) grün, CSS-Bundle enthält `.dark`-Regeln. Hinweis: noch nicht jede Ansicht visuell durchgeklickt; Loading-Skeletons bewusst ausgelassen.
+
+### Weiterhin offen
+1. **Secrets rotieren** (`NEXTAUTH_SECRET`, DB-Passwort, `ADMIN_RESET_TOKEN`); obsolete `JWT_SECRET`/`ADMIN_IMPORT_SECRET` in Coolify löschen.
+2. **Prod-DB `UserLocation`-Zuweisungen** prüfen: aktive User ohne Zuweisung (und ohne globale ADMIN-Rolle) sehen seit dem Permissions-Fix keine Daten.
+3. 33 react-hooks-v6-Warnungen, Playwright-E2E, Dark-Mode visuell durchklicken.
+
 ## 2026-08-12 (Teil 3) — Deployment auf Coolify reparieren (Next-16-Build)
 
 Nach dem Push blieb `dev.cp-app.control-monitor.de` auf **HTTP 503**. Deployment läuft auf **Coolify** (Server 138.199.166.94, Build via nixpacks, Routing/TLS via Traefik) — **nicht** über GitHub Actions (`ci.yml` testet nur). Der zuletzt live gelaufene Container war ein uralter Stand (**Next 14.1.4**, noch mit `swcMinify:false`), d.h. Coolify hatte monatelang keinen neuen Build gezogen; Auto-Deploy per Git-Webhook ist zwar aktiv, aber jeder neue Build schlug fehl.
